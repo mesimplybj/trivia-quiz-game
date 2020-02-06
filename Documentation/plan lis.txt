@@ -1,0 +1,15 @@
+Plans:
+
+
+-Read rules for popular HQ (game).
+-Differentiate the scope and out of scope features.
+-Make one workflow diagram
+-Project is going to be develop using Python.
+-Research on django framework.
+-Research on websocket in python.
+-Research on database for the project if necessary.
+
+
+-Code the project
+
+-Research how to buid and host the project in Heroku 

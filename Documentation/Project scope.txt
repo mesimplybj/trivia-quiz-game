@@ -1,12 +1,13 @@
 Features in scope 
 -User can choose any quiz to play
--Each quiz starts when the user  number reach to 100
+-Each quiz starts when the user  number reach to 100 (or less for test purpose)
 -Statistics should be show for each question of a quiz
 -Level of hardness of the quiz must be increase
 -Questions are taken from  open trivia database https://opentdb.com/
 -Last player standing in the quiz is declare as winner
 -Anyone can leave the quiz anytime
 -Time to solve each question is 10 sec
+-Simple design
 
 Features out of scope
 -user registration and mangement
