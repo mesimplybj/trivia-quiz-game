@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Trivia game</title>
+    {% include 'css.html' %}
+
+    <style>
+        .privew {
+            margin-bottom: 20px;
+        }
+
+        .questionsBox {
+            display: block;
+            border: solid 1px #e3e3e3;
+            padding: 10px 20px 0px;
+            box-shadow: inset 0 0 30px rgba(000, 000, 000, 0.1), inset 0 0 4px rgba(255, 255, 255, 1);
+            border-radius: 3px;
+            margin: 0 10px;
+        }
+
+        .questions {
+            background: #007fbe;
+            color: #FFF;
+            font-size: 22px;
+            padding: 8px 30px;
+            font-weight: 300;
+            margin: 0 -30px 10px;
+            position: relative;
+        }
+
+        .questions:after {
+            background: url(../img/icon.png) no-repeat left 0;
+            display: block;
+            position: absolute;
+            top: 100%;
+            width: 9px;
+            height: 7px;
+            content: '.';
+            left: 0;
+            text-align: left;
+            font-size: 0;
+        }
+
+        .questions:after {
+            left: auto;
+            right: 0;
+            background-position: -10px 0;
+        }
+
+        .questions:before,
+        .questions:after {
+            background: black;
+            display: block;
+            position: absolute;
+            top: 100%;
+            width: 9px;
+            height: 7px;
+            content: '.';
+            left: 0;
+            text-align: left;
+            font-size: 0;
+        }
+
+        .answerList {
+            margin-bottom: 15px;
+        }
+
+
+        ol,
+        ul {
+            list-style: none;
+        }
+
+        .answerList li:first-child {
+            border-top-width: 0;
+        }
+
+        .answerList li {
+            padding: 3px 0;
+        }
+
+        .answerList label {
+            display: block;
+            padding: 6px;
+            border-radius: 6px;
+            border: solid 1px #dde7e8;
+            font-weight: 400;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        input[type=checkbox],
+        input[type=radio] {
+            margin: 4px 0 0;
+            margin-top: 1px;
+            line-height: normal;
+        }
+
+        .questionsRow {
+            background: #dee3e6;
+            margin: 0 -20px;
+            padding: 10px 20px;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .button,
+        .greyButton {
+            background-color: #f2f2f2;
+            color: #888888;
+            display: inline-block;
+            border: solid 3px #cccccc;
+            vertical-align: middle;
+            text-shadow: 0 1px 0 #ffffff;
+            line-height: 27px;
+            min-width: 160px;
+            text-align: center;
+            padding: 5px 20px;
+            text-decoration: none;
+            border-radius: 0px;
+            text-transform: capitalize;
+        }
+
+        .questionsRow span {
+            float: right;
+            display: inline-block;
+            line-height: 30px;
+            border: solid 1px #aeb9c0;
+            padding: 0 10px;
+            background: #FFF;
+            color: #007fbe;
+        }
+        .answerList label.choose {
+            background-color: red;
+        }
+        input[type="checkbox"], input[type="radio"]
+        {
+            display: none;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-sm">
+                Maximum number of player: <span id="totalPlayer"></span>
+            </div>
+            <div class="col-sm">
+                Number of active Players: <span id="userCount">0</span>
+            </div>
+            <div class="col-sm" id="time" style="display: none;">
+                <div class="row begin-countdown">
+                    <div class="col-md-12 text-center">
+                        <progress value="10" max="10" id="pageBeginCountdown"></progress>
+                        <p> Next question  in <span id="pageBeginCountdownText">10 </span> seconds</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='container' id="questionbox" style="display: none;">
+        <div class="privew">
+            <div class="questionsBox">
+                <div class="questions">
+                    Which of the following is correct about data-keyboard Data attribute of Modal
+                    Plugin?
+                </div>
+                <ul class="answerList">
+                    <li>
+                        <label>
+                            <input type="radio" name="answerGroup" value="0" id="answerGroup_0"> It specifies static for
+                            a
+                            backdrop, if you don't want the modal to be closed when the user clicks outside of the
+                            modal.</label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="answerGroup" value="1" id="answerGroup_1"> It closes the modal
+                            when
+                            escape key is pressed; set to false to disable.</label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="answerGroup" value="2" id="answerGroup_2"> It shows the modal when
+                            initialized.</label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="answerGroup" value="3" id="answerGroup_3"> Using the jQuery .load
+                            method, injects content into the modal body. If an href with a valid URL is added, it will
+                            load
+                            that content.</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% include 'js.html' %}
+    {% block script %}
+    {% endblock %}
+
+    <script>
+        //ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
+        //value => alert(`Page has started: ${value}.`)
+        //);
+        function ProgressCountdown(timeleft, bar, text) {
+            return new Promise((resolve, reject) => {
+                var countdownTimer = setInterval(() => {
+                    timeleft--;
+
+                    document.getElementById(bar).value = timeleft;
+                    document.getElementById(text).textContent = timeleft;
+
+                    if (timeleft <= 0) {
+                        clearInterval(countdownTimer);
+                        resolve(true);
+                    }
+                }, 1000);
+            });
+        }
+
+
+        function websocket() {
+            let roomName = "{{ room_name|escapejs }}";
+            let webSocket = new WebSocket(
+                'ws://' + window.location.host +
+                '/ws/room/' + roomName + '/');
+
+            webSocket.onmessage = function (e) {
+                let data = JSON.parse(e.data);
+                let message = data['message'];
+                let serverstate = data['serverstate'];
+                let context = data['context'];
+                let numberofuser = data['numberofuser'];
+
+                IDselector('userCount').textContent = message;
+                IDselector('totalPlayer').textContent = numberofuser;
+                switch (context) {
+                    case 'connection':
+                        IDselector('time').style.display = "none";
+                        break;
+                    case 'startgame':
+                        IDselector('time').style.display = "block";
+                        IDselector('questionbox').style.display = "block";
+                        startgame();
+                        break;
+                }
+            };
+            webSocket.onclose = function (e) {
+                console.error('Web socket closed unexpectedly');
+            };
+
+            webSocket.onopen = function (e) {
+                webSocket.send(JSON.stringify({
+                    'message': "just loaded",
+                    'state': "connected"
+                }));
+            };
+            function startgame() {
+                ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
+                    value => {
+                        radioDisable(true);
+                    }
+                );
+            }
+            //obj message is of type json
+            function send_To_Server(objMessage) {
+                webSocket.send(JSON.stringify(objMessage));
+            }
+            IDselector = function (id) {
+                return document.getElementById(id);
+            };
+            Classselector = function () {
+                document.querySelector('#time')
+            };
+
+            radioDisable = function (active) {
+                let rds = document.querySelectorAll('[name="answerGroup"]')
+                for (i = 0, length = rds.length; i < length; ++i) {
+                    rds[i].disabled = active;
+                }
+            }
+            init_events = function () {
+                let rds = document.querySelectorAll('[name="answerGroup"]');
+                for (i = 0, length = rds.length; i < length; ++i) {
+                    rds[i].onclick = function () {
+                        debugger;
+                        let value = this.value;
+                        this.closest('label').classList.add("choose");
+                        send_To_Server({
+                            'message': value,
+                            'state': "answer"
+                        })
+                        radioDisable(true);
+                    }
+                }
+            }
+            init_events();
+        }
+        window.onload = function () {
+            websocket();
+        };
+    </script>
+</body>
+
+</html>
