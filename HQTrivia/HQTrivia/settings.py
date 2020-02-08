@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-ASGI_APPLICATION = "HQTrivia.routing.application"
+ASGI_APPLICATION = "HQTrivia.HQTrivia.routing.application"
 DISABLE_COLLECTSTATIC=1
 
 CHANNEL_LAYERS = {
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'HQTrivia.urls'
+ROOT_URLCONF = 'HQTrivia.HQTrivia.urls'
 
 TEMPLATES = [
     {
@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'HQTrivia.wsgi.application'
+WSGI_APPLICATION = 'HQTrivia.HQTrivia.wsgi.application'
 
 
 # Database
