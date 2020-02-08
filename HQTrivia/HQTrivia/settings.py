@@ -42,17 +42,16 @@ INSTALLED_APPS = [
 ]
 
 ASGI_APPLICATION = "HQTrivia.routing.application"
-
+DISABLE_COLLECTSTATIC=1
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": ["redis-14423.c56.east-us.azure.cloud.redislabs.com:14423"],
         },
     },
 }
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,7 +92,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
