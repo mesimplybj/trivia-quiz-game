@@ -1,2 +1,4 @@
+gunicorn
 Django==3.0.3
 channels==2.4.0
+django-redis-cache
