@@ -1,1 +1,0 @@
-web: gunicorn HQTrivia.HQTrivia.wsgi
