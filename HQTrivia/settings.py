@@ -25,7 +25,7 @@ SECRET_KEY = '8q!7ht@kp1hyegz=1nj^&$&6(h+$6w6jc)06l)g6+byl!laq0w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['testmysitefortest.herokuapp.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['trivia-quiz-game-bj.herokuapp.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
