@@ -134,14 +134,15 @@
             background: #FFF;
             color: #007fbe;
         }
+
         .answerList label.choose {
             background-color: red;
         }
-        input[type="checkbox"], input[type="radio"]
-        {
+
+        input[type="checkbox"],
+        input[type="radio"] {
             display: none;
         }
-
     </style>
 </head>
 
@@ -149,7 +150,7 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-sm">
-                Maximum number of player: <span id="totalPlayer"></span>
+                Maximum number of player: <span id="totalPlayer">0</span>
             </div>
             <div class="col-sm">
                 Number of active Players: <span id="userCount">0</span>
@@ -158,7 +159,7 @@
                 <div class="row begin-countdown">
                     <div class="col-md-12 text-center">
                         <progress value="10" max="10" id="pageBeginCountdown"></progress>
-                        <p> Next question  in <span id="pageBeginCountdownText">10 </span> seconds</p>
+                        <p> Next question in <span id="pageBeginCountdownText">10 </span> seconds</p>
                     </div>
                 </div>
             </div>
@@ -167,35 +168,30 @@
     <div class='container' id="questionbox" style="display: none;">
         <div class="privew">
             <div class="questionsBox">
-                <div class="questions">
-                    Which of the following is correct about data-keyboard Data attribute of Modal
-                    Plugin?
+                <div class="questions" id="questions">                   
                 </div>
                 <ul class="answerList">
                     <li>
                         <label>
-                            <input type="radio" name="answerGroup" value="0" id="answerGroup_0"> It specifies static for
-                            a
-                            backdrop, if you don't want the modal to be closed when the user clicks outside of the
-                            modal.</label>
+                            <input type="radio" name="answerGroup" value="0" id="answerGroup_0">
+                            <span class="options"></span></label>
                     </li>
                     <li>
                         <label>
-                            <input type="radio" name="answerGroup" value="1" id="answerGroup_1"> It closes the modal
-                            when
-                            escape key is pressed; set to false to disable.</label>
+                            <input type="radio" name="answerGroup" value="1" id="answerGroup_1">
+                            <span class="options"></span></label>
                     </li>
                     <li>
                         <label>
-                            <input type="radio" name="answerGroup" value="2" id="answerGroup_2"> It shows the modal when
-                            initialized.</label>
+                            <input type="radio" name="answerGroup" value="2" id="answerGroup_2">
+                            <span class="options"></span>
+                        </label>
                     </li>
                     <li>
                         <label>
-                            <input type="radio" name="answerGroup" value="3" id="answerGroup_3"> Using the jQuery .load
-                            method, injects content into the modal body. If an href with a valid URL is added, it will
-                            load
-                            that content.</label>
+                            <input type="radio" name="answerGroup" value="3" id="answerGroup_3">
+                            <span class= "options"></span>
+                            </label>
                     </li>
                 </ul>
             </div>
@@ -228,38 +224,39 @@
 
         function websocket() {
             let roomName = "{{ room_name|escapejs }}";
-            let webSocket = new WebSocket(
+            let chatSocket = new WebSocket(
                 'ws://' + window.location.host +
-                '/ws/room/' + roomName + '/');
+                '/ws/chat/' + roomName + '/');
 
-            webSocket.onmessage = function (e) {
+            chatSocket.onmessage = function (e) {
                 let data = JSON.parse(e.data);
                 let message = data['message'];
-                let serverstate = data['serverstate'];
                 let context = data['context'];
-                let numberofuser = data['numberofuser'];
-
-                IDselector('userCount').textContent = message;
-                IDselector('totalPlayer').textContent = numberofuser;
+                let numberofuser = data['numberofuser'];                
+                console.log(data);
                 switch (context) {
                     case 'connection':
                         IDselector('time').style.display = "none";
+                        IDselector('userCount').textContent = message;
+                        IDselector('totalPlayer').textContent = numberofuser;
                         break;
                     case 'startgame':
+                    case 'runninggame':
                         IDselector('time').style.display = "block";
                         IDselector('questionbox').style.display = "block";
-                        startgame();
+                        //startgame();
+                        askQuestion(data);
                         break;
                 }
             };
-            webSocket.onclose = function (e) {
-                console.error('Web socket closed unexpectedly');
+            chatSocket.onclose = function (e) {
+                console.error('Chat socket closed unexpectedly');
             };
 
-            webSocket.onopen = function (e) {
-                webSocket.send(JSON.stringify({
-                    'message': "just loaded",
-                    'state': "connected"
+            chatSocket.onopen = function (e) {
+                chatSocket.send(JSON.stringify({
+                    'message': "connecting to server",
+                    'state': "connect"
                 }));
             };
             function startgame() {
@@ -269,12 +266,24 @@
                     }
                 );
             }
+            function askQuestion(data) {
+                let question = data['question'];
+                let options = data['options'];
+                IDFillText('questions', question);
+                let span = document.querySelectorAll('.options')
+                for (i = 0, length = span.length; i < length; ++i) {
+                    span[i].textContent = options[i];;
+                }
+            }
             //obj message is of type json
             function send_To_Server(objMessage) {
-                webSocket.send(JSON.stringify(objMessage));
+                chatSocket.send(JSON.stringify(objMessage));
             }
             IDselector = function (id) {
                 return document.getElementById(id);
+            };
+            IDFillText = function (id, value) {
+                document.getElementById(id).textContent = value;
             };
             Classselector = function () {
                 document.querySelector('#time')
@@ -294,7 +303,7 @@
                         let value = this.value;
                         this.closest('label').classList.add("choose");
                         send_To_Server({
-                            'message': value,
+                            'answer': value,
                             'state': "answer"
                         })
                         radioDisable(true);

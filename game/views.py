@@ -13,5 +13,9 @@ def rooms(request):
 def home(request):
     return render(request, 'base.html')
 
+def chat(request):
+    return render(request, 'chat/index.html', {})
+
 def room(request, room_name):
+    #return render(request, 'chat/room.html', { 'room_name': room_name})
     return render(request, 'base.html', { 'room_name': room_name})
