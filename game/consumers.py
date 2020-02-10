@@ -3,75 +3,89 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
 import psycopg2
-from game.postgrehelper import PostgreHelp
+from .postgrehelper import PostgreHelp
+import time
+import asyncio
+from . import scheduler
 
-class ChatConsumer(WebsocketConsumer):
+#Game consumer that implements the websockerconsumer
+class GameConsumer(WebsocketConsumer):
     numberofuser = 3
+    groups = ["broadcast"]
     def connect(self):
+        self.user = self.scope["user"]
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-        #self.openstate = True
+
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
         )
         self.accept()
-        '''
-        self.send(text_data=json.dumps({
-                    'message': count
-         }))
-        async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name,
-                    {
-                        'type': 'chat_message',
-                        'message': 'member added'
-                    }
-                )
-        '''
+
     def disconnect(self, close_code):
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
         )
-
-    # Receive message from WebSocket
+    # Receive message from WebSockets
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        #message = text_data_json['message']
         state = text_data_json['state']
-        if state =='connect':
+        if state == 'connect':
             postgreHelp = PostgreHelp()
-            count =  postgreHelp.GetUserCount('roomname_' + self.room_name,self.numberofuser)
+            username = text_data_json['username']
+            #count the number of user in the group
+            count = postgreHelp.GetUserCount(self.room_name, self.numberofuser, username)
             context = 'connection'
-            # response to a  new connection with the number of users and
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name,
-                {
-                    'type': 'client_broadcast',
-                    'message': count,
-                    'context':context,
-                    'numberofuser':self.numberofuser
-                }
-            )
-            # if the group is full then start the quiz
-            if count== self.numberofuser: # and self.openstate == True:
-                context = 'startgame'    
-                print(context)
-                self.Question(context,'set')
-                #self.openstate = False
-            '''
-            if self.openstate == False:
-                context = 'runninggame'
-                self.Question(context,'get')
-            '''
+            if count <= self.numberofuser:
+                # response to a  new connection with the number
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'client_broadcast',
+                        'message': count,  
+                        'context': context,
+                        'numberofuser': self.numberofuser
+                    }
+                )
+                print(count)
+                # if the group is full then start the quiz
+                if count == self.numberofuser:  # and self.openstate == True:
+                    context = 'startgame'
+                    async_to_sync(self.channel_layer.group_send)(
+                        self.room_group_name,
+                        {
+                            'type': 'client_broadcast_gamestarting',
+                            'context': 'gamestarting'
+                        }
+                    )
+                    scheduler.add_new_job(self,self.room_group_name, context)
+            # no room for the new user
+            
+            else:
+                self.send(text_data=json.dumps({
+                    context: 'rooomfull'
+                }))
+                #dicontinue from the  group pool
+                async_to_sync(self.channel_layer.group_discard)(
+                    self.room_group_name,
+                    self.channel_name
+                )
         elif state == 'answer':
             answer = text_data_json['answer']
-            self.send(text_data=json.dumps({
-                                'message': answer
-            }))
-   
+            username = text_data_json['userName']
+            postgreHelp = PostgreHelp()
+            postgreHelp.AnswerUpdate(self.room_name, username, answer)
+
+
+    def client_broadcast_gamestarting(self, event):
+            # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'context': event['context']
+    }))
     # Receive message from room group
     def client_broadcast(self, event):
         # Send message to WebSocket
@@ -88,36 +102,74 @@ class ChatConsumer(WebsocketConsumer):
             'question': event['question'],
             'options': event['options']
         }))
-    
-    def Question(self, context, status):        
-        
-        postgreHelp = PostgreHelp()
-        groupName ='asgi::group:chat_' + self.room_name + '_ques'
-        que = None
-        if status =='set':
-            que = postgreHelp.SetQuestion(groupName)
-        else:
-            que = postgreHelp.GetQuestion(groupName)
-        if  que is not None:
+
+    def client_broadcast_result(self, event):
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'context': event['context'],
+            'answer': event['answer'],
+            'stat': event['stat']
+    }))
+
+    def client_broadcast_winner(self, event):
+            # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'context': event['context']
+    }))
+
+    def Question(self, que,context):
+        if que is not None:
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name,
                 {
                     'type': 'client_broadcast_question',
                     'question': que[0],
-                    'context':context,
-                    'options':que[1]
+                    'context': context,
+                    'options': que[1]
                 }
             )
 
-
-    '''
-    def broadcast(self, msg):
-        self.send(text_data=json.dumps({
-                'message': event['message'],
-            }))
-    '''
-    def countdown(self ,t):
-        while t:
-            mins, secs = divmod(t, 60)      
-            time.sleep(1)
-            t -= 1
+    def check_score(self, roomname, context):
+        print('i am scheduled')
+        # Receive message from room group
+        postgreHelp = PostgreHelp()
+        #check  for the old question's number aand difficulty
+        questionNo, diffculty = postgreHelp.OldQuestion(self.room_name)
+        # this is the first question so no need to broadcast previous ans statistics
+        if(questionNo < 1):
+            que = postgreHelp.SetQuestion(self.room_name,diffculty,False)
+            self.Question(que,"startgame")
+        else:
+            answers, correct_answer = postgreHelp.GetGroupAnswer(self.room_name)
+            #if correct_answer is not None and len(correct_answer) > 0:
+            postgreHelp.DeleteCurrentAns(self.room_name,correct_answer)
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name,
+                 {
+                    'type': 'client_broadcast_result',
+                    'answer': correct_answer,
+                    'stat': answers,
+                    'context': "result" 
+                }
+            )
+            usercount = postgreHelp.GetRemainingUserCount(self.room_name)
+            print(usercount)
+            if usercount == 0:
+                ##discontinue to broadcast
+                scheduler.stop(self.room_group_name)
+                pass
+            elif usercount == 1:
+                # declare winner here
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
+                        {
+                        'type': 'client_broadcast_winner',
+                        'context': "winner" 
+                    }
+                )
+                scheduler.stop(self.room_group_name)
+                pass
+            else:
+                time.sleep(5) 
+                que = postgreHelp.SetQuestion(self.room_name,diffculty,True)
+                self.Question(que,context)       
