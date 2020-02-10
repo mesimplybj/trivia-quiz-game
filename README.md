@@ -74,7 +74,3 @@ requirements that are developed during this project are
 requirements that are not  developed during this project are
 * user registration and mangement
 * user logs
-
-##### Features that can be added
-* features  that are not in current scope
-* 
