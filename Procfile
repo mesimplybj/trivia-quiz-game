@@ -1,1 +1,1 @@
-web: gunicorn HQTrivia.HQTrivia.wsgi
+web: daphne HQTrivia.asgi:application --port $PORT --bind 0.0.0.0 -v2
