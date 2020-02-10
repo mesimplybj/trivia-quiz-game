@@ -25,7 +25,7 @@ SECRET_KEY = '8q!7ht@kp1hyegz=1nj^&$&6(h+$6w6jc)06l)g6+byl!laq0w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['testmysitefortest.herokuapp.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -41,15 +41,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-ASGI_APPLICATION = "HQTrivia.HQTrivia.routing.application"
+ASGI_APPLICATION = "HQTrivia.routing.application"
 DISABLE_COLLECTSTATIC=1
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": ["redis-14423.c56.east-us.azure.cloud.redislabs.com:14423"],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 MIDDLEWARE = [
@@ -62,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'HQTrivia.HQTrivia.urls'
+ROOT_URLCONF = 'HQTrivia.urls'
 
 TEMPLATES = [
     {
@@ -80,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'HQTrivia.HQTrivia.wsgi.application'
+WSGI_APPLICATION = 'HQTrivia.wsgi.application'
 
 
 # Database
@@ -134,3 +131,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+MIDDLEWARE_CLASSES = (
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
