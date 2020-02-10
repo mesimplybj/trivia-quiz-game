@@ -7,8 +7,14 @@
 
     <title>Trivia game</title>
     {% include 'css.html' %}
-
+    <style>
+        h4,
+        p {
+            color: black;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
         <div class="row">
@@ -26,13 +32,13 @@
                 <div class="thumbnail card">
                     <div class="caption card-body">
                         <h4 class="group card-title inner list-group-item-heading">
-                            Room Title</h4>
-                            <p class="group inner list-group-item-text">
-                                Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-                                sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
-                        <div class="row">                            
+                            Room: one</h4>
+                        <p class="group inner list-group-item-text">
+                            Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                            sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+                        <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <a class="btn btn-success" target="_Blank" href="http://127.0.0.1:8080/game/one/">one</a>
+                                <a class="btn btn-success" target="_Blank" href="one/">Enter the room</a>
                             </div>
                         </div>
                     </div>
@@ -42,13 +48,13 @@
                 <div class="thumbnail card">
                     <div class="caption card-body">
                         <h4 class="group card-title inner list-group-item-heading">
-                            Room Title</h4>
-                            <p class="group inner list-group-item-text">
-                                Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-                                sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
-                        <div class="row">                            
+                            Room: Two</h4>
+                        <p class="group inner list-group-item-text">
+                            Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                            sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+                        <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <a class="btn btn-success"  target="_Blank" href="http://127.0.0.1:8080/game/four/">four</a>
+                                <a class="btn btn-success" target="_Blank" href="two/">Enter the room</a>
                             </div>
                         </div>
                     </div>
@@ -58,13 +64,13 @@
                 <div class="thumbnail card">
                     <div class="caption card-body">
                         <h4 class="group card-title inner list-group-item-heading">
-                            Room Title</h4>
-                            <p class="group inner list-group-item-text">
-                                Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-                                sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
-                        <div class="row">                            
+                            Room:Three</h4>
+                        <p class="group inner list-group-item-text">
+                            Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                            sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+                        <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <a class="btn btn-success"  target="_Blank" href="http://127.0.0.1:8080/game/three">three</a>
+                                <a class="btn btn-success" target="_Blank" href="three/">Enter the room</a>
                             </div>
                         </div>
                     </div>
@@ -74,25 +80,52 @@
                 <div class="thumbnail card">
                     <div class="caption card-body">
                         <h4 class="group card-title inner list-group-item-heading">
-                            Room Title</h4>
-                            <p class="group inner list-group-item-text">
-                                Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-                                sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
-                        <div class="row">                            
+                            Room:Four</h4>
+                        <p class="group inner list-group-item-text">
+                            Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                            sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+                        <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <a class="btn btn-success"  target="_Blank" href="http://127.0.0.1:8080/game/two/">two</a>
+                                <a class="btn btn-success" target="_Blank" href="four/">Enter the room</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+            <div class="item col-xs-4 col-lg-4 mb-4">
+                <div class="thumbnail card">
+                    <div class="caption card-body">
+                        <h4 class="group card-title inner list-group-item-heading">
+                            Room: Custom room</h4>
+                        <p class="group inner list-group-item-text">
+                            Create your own custom room and enter.</p>
+                        <div id="login-form" class="form" action="" method="post">
+                            <div class="form-group">
+                                <label for="username" class="text-info">RoomName:</label><br>
+                                <input type="text" name="username" id="txtCustomRoom" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 col-md-6">
+                                <span class="btn btn-success" id="customRoom">Enter the room</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     {% include 'js.html' %}
     {% block script %}
     {% endblock %}
-
+    <script>
+        document.querySelector('#customRoom').onclick = function (e) {
+            let customRoom = document.querySelector('#txtCustomRoom').value;
+            if (customRoom.length > 0)
+                window.location.pathname = '/game/' + customRoom + '/';
+            else
+                alert('please enter the room name')
+        };
+    </script>
 </body>
-
 </html>

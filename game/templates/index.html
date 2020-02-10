@@ -4,9 +4,33 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <title>Trivia game</title>
     {% include 'css.html' %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #17a2b8 !important;
+            height: 100vh;
+            color: white;
+        }
+
+        #login .container #login-row #login-column #login-box {
+            margin-top: 120px;
+            max-width: 600px;
+            height: 320px;
+            border: 1px solid #9C9C9C;
+            background-color: #EAEAEA;
+        }
+
+        #login .container #login-row #login-column #login-box #login-form {
+            padding: 20px;
+        }
+
+        #login .container #login-row #login-column #login-box #login-form #register-link {
+            margin-top: -85px;
+        }
+    </style>
 </head>
 
 <body>
@@ -27,7 +51,7 @@
             <div id="login-row" class="row justify-content-center align-items-center">
                 <div id="login-column" class="col-md-6">
                     <div id="login-box" class="col-md-12">
-                        <form id="login-form" class="form" action="" method="post">
+                        <div id="login-form" class="form" action="" method="post">
                             <h3 class="text-center text-info">Trivia game</h3>
                             <div class="form-group">
                                 <label for="username" class="text-info">Username:</label><br>
@@ -36,7 +60,7 @@
                             <div class="form-group">
                                 <span type="button" id="btnEnterGame" class="btn btn-primary">Enter the game</button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -46,10 +70,44 @@
     {% block script %}
     {% endblock %}
     <script>
-    document.querySelector('#btnEnterGame').onclick = function(e) {
-                var roomName = document.querySelector('#username').value;
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        function checkCookie() {
+            var user = getCookie("temptriviauser");
+            if (user != "") {
+                document.querySelector('#username').value = user
+            }
+        }
+        checkCookie()
+        document.querySelector('#btnEnterGame').onclick = function (e) {
+            var username = document.querySelector('#username').value;
+            if (username.length == 0) {
+                alert('please enter your name')
+            }
+            else {
+                document.cookie = "temptriviauser=" + username;
+                setCookie("temptriviauser=", username, 1)
                 window.location.pathname = '/game/rooms'; //+ roomName + '/';
-    };
+            }
+        };
     </script>
 </body>
 
