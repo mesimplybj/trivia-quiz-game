@@ -9,7 +9,20 @@ The main aim of this game is to create  a multiplayer trivia game app, with rule
 ## Overview
 This project is developed in python using Django Framework. The websockets are  implemented using the django Channels. BackgroundScheduler is use to schedule the time of server to send the questions accross the connected clients.
 
-Channel layer 
+[Client Flow chart](https://github.com/mesimplybj/trivia-quiz-game/blob/master/Documentation/user%20workflow.jpg)
+[Admin Flow chart](https://github.com/mesimplybj/trivia-quiz-game/blob/master/Documentation/Listener%20engine.jpg)
+
+# [Demo link ](https://trivia-quiz-game-bj.herokuapp.com/)
+#### How to play the game
+* After the page landing page is loaded
+* Enter your name
+* Choose a group  and wait untill other user join the game
+* As soon as other user joins the game , questions are asked from the server with four options. 
+* Question are  consume from https://opentdb.com/ .
+* As everyone levels up the difficulty of the question also rises
+* The last standing person will be the winner
+
+Locally or in Demo you can join a room from different browser  at same time and  play the game. To test i hava set the maximum user connection to 3 which can be change later.
 
 ## Quickstart
 
@@ -29,7 +42,7 @@ If you want to run the app locally clone or download the projec in the local fol
 ```bash
 cd Users/User/Desktop/Trivia_Quiz_Game
 ```
-###### system reuirements
+##### System requirements
 * python 3.6 or above 
 * pip3
 * virtualenv module
@@ -53,8 +66,9 @@ After the succesfull installation of every modules, now its time to run the  pro
 ```bash
 (triviagame) C:\Users\Bijay\Desktop\Trivia_Quiz_Game>python manage.py runserver 8090
 ```
+Create a database in postgreqlserver and add create table from from database query file inside script folder and change the connection string
 
-then  your game is ready to go at  (http://127.0.0.1:8090/). If your 8090 is already in use then change the port and run the command
+Then  your game is ready to go at  (http://127.0.0.1:8090/). If your 8090 is already in use then change the port and run the command
 
 ##### Features in scope 
 requirements that are developed during this project are
@@ -74,3 +88,11 @@ requirements that are developed during this project are
 requirements that are not  developed during this project are
 * user registration and mangement
 * user logs
+
+##### Keynotes from  the project
+* Python
+* Django
+* Django channels
+* Python scheduler
+* Redis
+* PostGreSQL
