@@ -41,7 +41,7 @@ class RedisHelp:
         return  (self.redisClient.hget(hashname, "question"),self.redisClient.hget(hashname, "answers"))
 '''
 redisHelp = RedisHelp()
-redishash ='asgi::group:chat_one_ques'
+redishash ='asgi::group:game_one_ques'
 question = redisHelp.SetQuestion(redishash)
 #print(question)
 print(redisHelp.GetHashData(redishash,"no"))

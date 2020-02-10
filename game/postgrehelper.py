@@ -1,145 +1,202 @@
-import game.opentdb as api
+from .opentdb import OpenTbRequest as API
 from random import shuffle
 import json
 import psycopg2
+from collections import Counter
 
 class PostgreHelp:
     def __init__(self):
         #self.redisClient = redis.Redis(host="127.0.0.1", port=6379)
-         self.user= 'user'    
-    '''
-    def GetHashData(self, hashname, key):
-        return self.redisClient.hget(hashname, key)
-    '''
-    def SetQuestion(self, groupname):
-        question = ''
-        answers= ''
-        try:
-            print ("here i am ")
-            connection = psycopg2.connect(user="postgres",
-                                  password="admin",
-                                  host="127.0.0.1",
+        self.user = 'user'
+        
+        self.connection = psycopg2.connect(user="postgres",
+                                           password="admin",
+                                           host="127.0.0.1",
+                                           port="5432",
+                                           database="trivia")
+        '''
+        self.connection = psycopg2.connect(user="mmeqtzuigcrudl",
+                                  password="2f55bd846a95842e210cc3ac1585d2254479ccd33219fc5615b23aa1de07feb9",
+                                  host="ec2-184-72-236-57.compute-1.amazonaws.com",
                                   port="5432",
-                                  database="trivia")
-            cursor = connection.cursor()
-            existingQuestion = "SELECT * FROM public.questions where groupname = '{}' ".format(groupname)
-            cursor.execute(existingQuestion)
-            connection.commit()
+                                  database="dauao6n2jna0eu")  
+        '''
+    #return the previous question's difficulty and question number.
+    def OldQuestion(self, groupname):
+        cursor = self.connection.cursor()
+        question = "SELECT *  FROM public.questions where groupname = '{}' ".format(groupname)
+        cursor.execute(question)
+        self.connection.commit()
+        difficulty = 'easy'
+        quesno = 0
+        if cursor.rowcount > 0:
+            row = cursor.fetchone()
+            quesno = int(row[7])
+        if quesno <= 10:
+            difficulty = 'easy'
+        elif quesno > 10 and quesno < 20:
+            difficulty = 'medium'
+        else:
+            difficulty = 'hard'
+        return (quesno, difficulty)
 
-            difficulty ='easy'
-            quesno = 0
-            exist = False
-            if cursor.rowcount >0:
-                row = cursor.fetchone()
-                quesno  = int(row[7])
-                exist = True
-            if quesno <= 10:
-                difficulty ='easy'
-            elif quesno > 10 and quesno < 20:
-                difficulty ='medium'
-            else:
-                difficulty = 'hard'
+    #set the question needed to broadcast to the end users
+    def SetQuestion(self, groupname, difficulty,exist):
+        question = ''
+        answers = ''
+        quesno=0
+        try:
+            ##get question from API
+            api = API()
             questionResult = api.GetQuestion(difficulty)
-            result= questionResult['results'][0]
+            result = questionResult['results'][0]
             question = result['question']
-            correct_answer =result['correct_answer']
-            answers =result['incorrect_answers']
+            correct_answer = result['correct_answer']
+            answers = result['incorrect_answers']
+            #mixed and shuffle the options
             answers.append(correct_answer)
             shuffle(answers)
             quesno += 1
-
-            if exist:
-                #updateUserNO = "UPDATE questions SET  no={0}, correctanswer={1}, difficulty={2}, question={3}, answers={4} WHERE groupname= '{5}'"
-                updateUserNO = "UPDATE questions SET  quesno={0}, correctanswer={1}, difficulty={2}, question={3}, answers={4} WHERE groupname= '{5}'"
-                updateUserNO = updateUserNO.format(quesno,correct_answer,difficulty,question,answers,groupname)
-                cursor.execute(updateUserNO)
-                connection.commit()
-            '''
+            
+            cursor = self.connection.cursor()
+            if exist == True:
+                #updateUserNO = "UPDATE questions SET  quesno=%s, correctanswer=%s, difficulty=%s, question=%s, answers=%s WHERE groupname= %s"
+                #updateUserNO = (quesno,correct_answer,difficulty,question,answers,groupname)
+                updateQuestionNo = "UPDATE questions SET  quesno=%s, correctanswer=%s, difficulty=%s, question=%s, answers=%s WHERE groupname= %s"
+                ans = (quesno, correct_answer, difficulty,
+                       question, '{}', groupname)
+                cursor.execute(updateQuestionNo, ans)
+                self.connection.commit()
             else:
-                postgres_insert_query = "INSERT INTO public.questions(groupname, no, correctanswer, difficulty, question, answers) VALUES ( {0},{1},{2},{3},{4},{5}}"
-                record_to_insert = (groupname,no,correct_answer,difficulty,question,answers)
-                cursor.execute(postgres_insert_query, record_to_insert)
-                connection.commit()
-            '''
-            print(quesno)
-            print(question, answers)
-        except (Exception, psycopg2.Error) as error :
-            if(connection):
+                question_insert = "INSERT INTO public.questions(groupname, userno, correctanswer, difficulty, question,quesno) VALUES ( '{}',{},'{}','{}','{}',{})"
+                question_insert = question_insert.format(
+                    groupname, quesno, correct_answer, difficulty, question, 1)
+                cursor.execute(question_insert)
+                self.connection.commit()
+
+        except (Exception, psycopg2.Error) as error:
+            if(self.connection):
                 print(error)
         finally:
-        #closing database connection.
-            if(connection):
+            # closing database connection.
+            if(self.connection):
                 cursor.close()
-                connection.close()
+                self.connection.close()
                 print("PostgreSQL connection is closed")
-        return (question, answers)
-    
+        return (question, answers,quesno)
+
     def GetQuestion(self, groupname):
-        connection = psycopg2.connect(user="postgres",
-                                  password="admin",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="trivia")
-        cursor = connection.cursor()
+        cursor = self.connection.cursor()
         existingQuestion = 'SELECT * FROM public.questions where groupname = %s '
-        cursor.execute(existingQuestion,groupname)
-        question =None
+        cursor.execute(existingQuestion, groupname)
+        self.connection.commit()
+        question = None
         answers = None
         if cursor.rowcount > 0:
             row = cursor.fetchone()
-            question  = int(row[5])
-            answers  = int(row[6])
+            question = int(row[5])
+            answers = int(row[6])
         return (question, answers)
 
-    def GetUserCount(self, groupname, maxuser):
-        connection = psycopg2.connect(user="postgres",
-                                  password="admin",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="trivia")
-        cursor = connection.cursor()
-        existingQuestion = "SELECT * FROM public.questions where groupname = '{0}' ".format(groupname)
-        cursor.execute(existingQuestion)  
-        connection.commit()      
-        users = 0
-        #the group already contains the user
-        if cursor.rowcount > 0:
+    #returns the number of users associated with current group.
+    #this is called before the  room  has initiated the quiz
+    def GetUserCount(self, groupname, maxuser, username):
+        # the group already contains the user
+        cursor = self.connection.cursor()
+        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' ".format(groupname)
+        cursor.execute(existing_user)
+        self.connection.commit()
+        row = cursor.fetchone()
+        totalusers = int(row[0])
+        if(totalusers < maxuser):
+            cursor = self.connection.cursor()
+            existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' and username= '{1}' ".format(
+                groupname, username)
+            cursor.execute(existing_user)
+            self.connection.commit()
             row = cursor.fetchone()
-            users  = int(row[2])
-            #if there is still space for the user
-            if(users < maxuser):
-               users = self.UpdateUserCount( groupname, users)
-            elif users > maxuser:                
-                print('this user is late, in between somebody took that space')
-        #this user is the first user.
-        else:
-            users = self.FirstUser(groupname)
-            print('')
+            currentUser = int(row[0])
+            if currentUser == 0:
+                self.ConnectionAdd(groupname, username, '')
+                totalusers += 1
+        elif totalusers == maxuser:
+            totalusers += 1
+        return totalusers
+    
+    #returns the number of users associated with current group that are answering.
+    #this is checked before the result is sent the  room  has initiated the quiz
+    def GetRemainingUserCount(self, groupname):
+        cursor = self.connection.cursor()
+        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' and ans != '' ".format(groupname)
+        cursor.execute(existing_user)
+        self.connection.commit()
+        row = cursor.fetchone()
+        totalusers = int(row[0])
+        return totalusers
 
-        return  users
-
+    
     def UpdateUserCount(self, groupname, users):
-        connection = psycopg2.connect(user="postgres",
-                                  password="admin",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="trivia")
         users += 1
-        updateUserCount = "UPDATE questions SET  userno={0}  WHERE groupname= '{1}'".format(users, groupname)
-        cursor = connection.cursor()
+        updateUserCount = "UPDATE questions SET  userno={0}  WHERE groupname= '{1}'".format(
+            users, groupname)
+        cursor = self.connection.cursor()
         cursor.execute(updateUserCount)
-        connection.commit()
+        self.connection.commit()
         return users
 
-    def FirstUser(self, groupname):
-        connection = psycopg2.connect(user="postgres",
-                                  password="admin",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="trivia")
-        query_firstperson = "INSERT INTO public.questions(groupname, userno, correctanswer, difficulty, question,quesno) VALUES ( '{}',{},'{}','{}','{}',{})"
-        query_firstperson = query_firstperson.format(groupname,1,'','easy','',0)
-        cursor = connection.cursor()
-        cursor.execute(query_firstperson)
-        connection.commit()
-        return 1
+    def ConnectionAdd(self, groupname, username, ans):
+        ans_query = "INSERT INTO public.answers( groupname, username, ans) VALUES ('{}', '{}', '{}')"
+        ans_query = ans_query.format(groupname, username, ans)
+        cursor = self.connection.cursor()
+        cursor.execute(ans_query)
+        self.connection.commit()
+
+    def AnswerUpdate(self, groupname, username, ans):
+        ans_query = "Update answers set ans = '{}' where groupname='{}' and  username='{}'"
+        ans_query = ans_query.format(ans, groupname, username)
+        cursor = self.connection.cursor()
+        cursor.execute(ans_query)
+        self.connection.commit()
+
+    def GetCorrectAnswer(self, groupname):
+        cursor = self.connection.cursor()
+        existingQuestion = "SELECT correctanswer FROM public.questions where groupname = '{}'".format(groupname)
+        cursor.execute(existingQuestion)
+        self.connection.commit()
+        answers = None
+        if cursor.rowcount > 0:
+            row = cursor.fetchone()
+            answers = row[0]
+        return answers 
+
+    def GetGroupAnswer(self, groupname):
+        correct_answer = self.GetCorrectAnswer(groupname) 
+        cursor = self.connection.cursor()
+        existingQuestion = "SELECT * FROM answers where groupname = '{}'".format(
+            groupname)
+        cursor.execute(existingQuestion)
+        self.connection.commit()
+        ans_result = []
+        if cursor.rowcount > 0:
+            rows = cursor.fetchall()
+            for row in rows:
+                answers = row[3] 
+                ans_result.append(answers)
+        ans_stat = Counter(ans_result) 
+        return  (ans_stat.most_common(5), correct_answer)
+
+    def DeleteCurrentAns(self, groupname,answer):
+        ans_query = "Update answers set ans = '' where groupname='{}' and ans != '{}'"
+        ans_query = ans_query.format(groupname,answer)
+        cursor = self.connection.cursor()
+        cursor.execute(ans_query)
+        self.connection.commit()         
+
+    def TruncateTables(self): 
+        cursor = self.connection.cursor()
+        truncatequestions = "truncate table questions"
+        cursor.execute(truncatequestions)
+        self.connection.commit()
+        truncatequestions = "truncate table answers"
+        cursor.execute(truncatequestions) 
+        self.connection.commit()
