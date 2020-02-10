@@ -4,10 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <title>Trivia game</title>
     {% include 'css.html' %}
-
     <style>
         .privew {
             margin-bottom: 20px;
@@ -143,57 +141,109 @@
         input[type="radio"] {
             display: none;
         }
+
+        .correctanswer {
+            background-color: #279f3a;
+            color: black;
+        }
+
+        .incorrectanswer {
+            background-color: #ddcece;
+            color: black;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-sm">
-                Maximum number of player: <span id="totalPlayer">0</span>
-            </div>
-            <div class="col-sm">
-                Number of active Players: <span id="userCount">0</span>
-            </div>
-            <div class="col-sm" id="time" style="display: none;">
-                <div class="row begin-countdown">
-                    <div class="col-md-12 text-center">
-                        <progress value="10" max="10" id="pageBeginCountdown"></progress>
-                        <p> Next question in <span id="pageBeginCountdownText">10 </span> seconds</p>
+    <div id="gameon">
+        <div class="container mt-4" id="roomdetail">
+            <div class="row">
+                <div class="col-sm">
+                    Maximum number of player: <span id="totalPlayer">0</span>
+                </div>
+                <div class="col-sm">
+                    Number of active Players: <span id="userCount">0</span>
+                </div>
+                <div class="col-sm" id="time" style="display: none;">
+                    <div class="row begin-countdown">
+                        <div class="col-md-12 text-center">
+                            <progress value="10" max="10" id="pageBeginCountdown"></progress>
+                            <p> Next question in <span id="pageBeginCountdownText">10 </span> seconds</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class='container' id="questionbox" style="display: none;">
-        <div class="privew">
-            <div class="questionsBox">
-                <div class="questions" id="questions">                   
+        <section class="call-to-action" id="rooomfull" style="display: none;">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-sm-8 text-right m-text-center">
+                        <h1>Sorry the room is fulled and game is going on </h1>
+                    </div>
+                    <div class="col-md-4 col-sm-4 m-text-center">
+                        <a class="btn btn-white">Go to other room</a>
+                    </div>
                 </div>
-                <ul class="answerList">
-                    <li>
-                        <label>
-                            <input type="radio" name="answerGroup" value="0" id="answerGroup_0">
-                            <span class="options"></span></label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" name="answerGroup" value="1" id="answerGroup_1">
-                            <span class="options"></span></label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" name="answerGroup" value="2" id="answerGroup_2">
-                            <span class="options"></span>
-                        </label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" name="answerGroup" value="3" id="answerGroup_3">
-                            <span class= "options"></span>
+            </div>
+        </section>
+        <div class='container' id="btnLoogut" style="display: none;">
+            <button type="button" class="btn btn-danger">Logout</button>
+        </div>
+        <div class='container' id="questionbox" style="display: none;">
+            <div class="privew">
+                <div class="questionsBox">
+                    <div class="questions" id="questions">
+                    </div>
+                    <input type="hidden" value="" id="userAns">
+                    <ul class="answerList">
+                        <li>
+                            <label>
+                                <input type="radio" name="answerGroup" value="0" id="answerGroup_0">
+                                <span class="options"></span></label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="answerGroup" value="1" id="answerGroup_1">
+                                <span class="options"></span></label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="answerGroup" value="2" id="answerGroup_2">
+                                <span class="options"></span>
                             </label>
-                    </li>
-                </ul>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="answerGroup" value="3" id="answerGroup_3">
+                                <span class="options"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gameoff" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-sm-8 text-right m-text-center">
+                    <h1>Sorry! your answer is incorrect. You are out of this room</h1>
+                </div>
+                <div class="col-md-4 col-sm-4 m-text-center">
+                    <a class="btn btn-success" target="_Blank" href="/">Go to other room</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gameowinner" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-sm-8 text-right m-text-center">
+                    <h1>Congratulation you are the winner of the game</h1>
+                </div>
+                <div class="col-md-4 col-sm-4 m-text-center">
+                    <a class="btn btn-success" target="_Blank" href="/">Go to other room</a>
+                </div>
             </div>
         </div>
     </div>
@@ -221,18 +271,34 @@
             });
         }
 
+        function GetCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        var userName = '';
 
         function websocket() {
             let roomName = "{{ room_name|escapejs }}";
+            let wsStart = window.location.protocol == "https:" ? "wss://" : "ws://";
             let chatSocket = new WebSocket(
-                'ws://' + window.location.host +
-                '/ws/chat/' + roomName + '/');
+                wsStart + window.location.host +
+                '/ws/room/' + roomName + '/');
 
             chatSocket.onmessage = function (e) {
                 let data = JSON.parse(e.data);
                 let message = data['message'];
                 let context = data['context'];
-                let numberofuser = data['numberofuser'];                
+                let numberofuser = data['numberofuser'];
                 console.log(data);
                 switch (context) {
                     case 'connection':
@@ -244,21 +310,74 @@
                     case 'runninggame':
                         IDselector('time').style.display = "block";
                         IDselector('questionbox').style.display = "block";
-                        //startgame();
+                        startgame();
                         askQuestion(data);
                         break;
+                    case 'rooomfull':
+                        IDselector('time').style.display = "none";
+                        IDselector('questionbox').style.display = "none";
+                        IDselector('roomdetail').style.display = "none";
+                    case 'result':
+                        let correctanswer = data["answer"]
+                        let stat = data["stat"]
+                        ShowStat(correctanswer, stat);
+                        break;
+                    case 'winner':
+                        IDselector('gameon').style.display = "none";
+                        IDselector('gameowinner').style.display = "block";
+                        chatSocket.close();
+                        break;
+                    case 'gamestarting':
+
+                        break;
+
                 }
             };
             chatSocket.onclose = function (e) {
-                console.error('Chat socket closed unexpectedly');
+                console.error('Chat socket closed');
             };
 
             chatSocket.onopen = function (e) {
                 chatSocket.send(JSON.stringify({
                     'message': "connecting to server",
-                    'state': "connect"
+                    'state': "connect",
+                    'username': userName
                 }));
             };
+            function ShowStat(correctanswer, stat) {
+                let continueConnection = false;
+                let answerList = document.querySelectorAll('.answerList>li>label');
+                let statLength = stat.length;
+                for (i = 0, length = answerList.length; i < length; ++i) {
+                    let lbl = answerList[i];
+
+                    lbl.classList.remove("choose");
+                    let options = lbl.querySelectorAll('.options')[0];
+                    let ansLabel = options.innerText;
+                    if (correctanswer == ansLabel) {
+                        lbl.classList.add("correctanswer");
+                        continueConnection = true;
+                    }
+                    else {
+                        lbl.classList.add("incorrectanswer");
+                    }
+                    for (j = 0; j < statLength; j++) {
+                        let result = stat[j];
+                        if (result[0] == ansLabel) {
+                            count = result[1];
+                            options.textContent = ansLabel + " (" + result[1] + ")";
+                            break;
+                        }
+                    }
+                }
+                let userAns = IDselector("userAns").value;
+                if (userAns.length == 0 || correctanswer != userAns) {
+                    //discontinue connection close here
+                    IDselector('gameon').style.display = "none";
+                    IDselector('gameoff').style.display = "block";
+                    chatSocket.close();
+                }
+            }
             function startgame() {
                 ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
                     value => {
@@ -269,11 +388,14 @@
             function askQuestion(data) {
                 let question = data['question'];
                 let options = data['options'];
+                IDselector("userAns").value = '';
                 IDFillText('questions', question);
                 let span = document.querySelectorAll('.options')
                 for (i = 0, length = span.length; i < length; ++i) {
                     span[i].textContent = options[i];;
+                    span[i].closest('label').classList.remove("choose", "correctanswer", "incorrectanswer");
                 }
+                radioDisable(false);
             }
             //obj message is of type json
             function send_To_Server(objMessage) {
@@ -299,12 +421,13 @@
                 let rds = document.querySelectorAll('[name="answerGroup"]');
                 for (i = 0, length = rds.length; i < length; ++i) {
                     rds[i].onclick = function () {
-                        debugger;
-                        let value = this.value;
                         this.closest('label').classList.add("choose");
+                        let value = this.nextElementSibling.innerText;
+                        IDselector("userAns").value = value;
                         send_To_Server({
                             'answer': value,
-                            'state': "answer"
+                            'state': "answer",
+                            'userName': userName
                         })
                         radioDisable(true);
                     }
@@ -313,7 +436,12 @@
             init_events();
         }
         window.onload = function () {
-            websocket();
+            userName = GetCookie("temptriviauser");
+            if (userName == "" || userName == null) {
+                window.location.pathname = '/game'; //+ roomName + '/';
+            }
+            else
+                websocket();
         };
     </script>
 </body>
