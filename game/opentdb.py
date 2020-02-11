@@ -5,19 +5,17 @@ import json
 
 class OpenTbRequest:
     """
-    Class that 
+    Class that uses the open trivia api and helps to return the question
     """
-    def GetQuestions(self,difficulty):
+    def GetQuestion(self,difficulty):
         """
         Returns question along with right and wrong answers from open trivia database.
-
         Args: 
            difficulty (str): The difficulty of the question to be set
         Raises:
-            RuntimeError: Out of fuel
+            RuntimeError: None
         Returns:
-            jsom: json containing the question and  answers
-
+            json: json containing the question and  answers
         """
         category = str(randint(9, 32))
         url = 'https://opentdb.com/api.php?'
@@ -25,24 +23,9 @@ class OpenTbRequest:
         url += '&category='+category
         url += '&difficulty='+difficulty
         url += '&type=multiple'
-        #url+= '&encode=base64'
-        # print(url)
         resp = requests.get(url)
         if resp.status_code != 200:
             # This means something went wrong.
             print('error')
             return None   
         return resp.json()
-
-    def GetQuestion(self, difficulty):
-        """
-        Test question
-        """
-        return {
-            "results": [{
-                "question": " Who is the first prime minister of nepal ?",
-                "correct_answer": "Bhimsen thapa",
-                "incorrect_answers": ['asdfasdf', 'xyzasdfasdf', 'pqrsdfasd']
-            }]
-        }
-        

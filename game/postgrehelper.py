@@ -1,16 +1,21 @@
+"""
+HQTrivia Databse class: PostgreHelp
+
+This is the database layer. This layer is responsible for  the implementaion of
+functions that  performs the CRUD operations and provides a implemetable layer to
+the caller
+"""
 from .opentdb import OpenTbRequest as API
 from random import shuffle
 import json
 import psycopg2
 from collections import Counter
-
+import os
 
 class PostgreHelp:
     def __init__(self):
         #self.redisClient = redis.Redis(host="127.0.0.1", port=6379)
         self.user = 'user'
-        
-        '''
         self.connection = psycopg2.connect(user="postgres",
                                            password="admin",
                                            host="127.0.0.1",
@@ -22,10 +27,16 @@ class PostgreHelp:
                                   host="ec2-184-72-236-57.compute-1.amazonaws.com",
                                   port="5432",
                                   database="d78hmogumse5m9")  
-        
-    # return the previous question's difficulty and question number.
-
+        '''
     def OldQuestion(self, groupname):
+        """
+        Gives the previous question's difficulty and question number.
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            Tuple: question number , difficulty
+        """
         cursor = self.connection.cursor()
         question = "SELECT *  FROM public.questions where groupname = '{}' ".format(
             groupname)
@@ -46,6 +57,14 @@ class PostgreHelp:
 
     # set the question needed to broadcast to the end users
     def SetQuestion(self, groupname, difficulty, exist):
+        """
+        Gives the previous question's difficulty and question number.
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            Tuple: question number , difficulty
+        """
         question = ''
         answers = ''
         quesno = 0
@@ -90,6 +109,14 @@ class PostgreHelp:
         return (question, answers, quesno)
 
     def GetQuestion(self, groupname):
+        """
+        Gives the previous question's difficulty and question number.
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            Tuple: question number , difficulty
+        """
         cursor = self.connection.cursor()
         existingQuestion = 'SELECT * FROM public.questions where groupname = %s '
         cursor.execute(existingQuestion, groupname)
@@ -102,9 +129,17 @@ class PostgreHelp:
             answers = int(row[6])
         return (question, answers)
 
-    # returns the number of users associated with current group.
-    # this is called before the  room  has initiated the quiz
     def GetUserCount(self, groupname, maxuser, username):
+        """
+        Gives the number of users associated with current group.
+        This is called before the  room  has initiated the quiz.
+        Args: 
+            groupname (str): name of the group
+            maxuser (str): maximum number of user that the group can hold
+            username (str): name of the user
+        Returns:
+            totalusers(int): total number of user in the room
+        """
         # the group already contains the user
         cursor = self.connection.cursor()
         existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' ".format(
@@ -122,15 +157,21 @@ class PostgreHelp:
             row = cursor.fetchone()
             currentUser = int(row[0])
             if currentUser == 0:
-                self.ConnectionAdd(groupname, username, '')
+                self.AddUserToGroup(groupname, username, '')
                 totalusers += 1
         elif totalusers == maxuser:
             totalusers += 1
         return totalusers
 
-    # returns the number of users associated with current group that are answering.
-    # this is checked before the result is sent the  room  has initiated the quiz
     def GetRemainingUserCount(self, groupname):
+        """
+        Gives the remaining number of user in the group
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            totalusers(int):  remaining users
+        """
         cursor = self.connection.cursor()
         existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' and ans != '' ".format(
             groupname)
@@ -140,16 +181,31 @@ class PostgreHelp:
         totalusers = int(row[0])
         return totalusers
 
-    def UpdateUserCount(self, groupname, users):
-        users += 1
+    def UpdateUserCount(self, groupname, user):
+        """
+        Updates the user who is joining the group
+        Args: 
+            groupname (str): name of the group
+            user (int): name of the group
+        Returns:
+            user(int): total new users
+        """
+        user += 1
         updateUserCount = "UPDATE questions SET  userno={0}  WHERE groupname= '{1}'".format(
-            users, groupname)
+            user, groupname)
         cursor = self.connection.cursor()
         cursor.execute(updateUserCount)
         self.connection.commit()
-        return users
+        return user
 
-    def ConnectionAdd(self, groupname, username, ans):
+    def AddUserToGroup(self, groupname, username, ans):
+        """
+        initialize the connected user to group.
+        Args: 
+            groupname (str): name of the group
+            username (str): name of the user
+            ans (str): ans of the user
+        """
         ans_query = "INSERT INTO public.answers( groupname, username, ans) VALUES ('{}', '{}', '{}')"
         ans_query = ans_query.format(groupname, username, ans)
         cursor = self.connection.cursor()
@@ -157,6 +213,14 @@ class PostgreHelp:
         self.connection.commit()
 
     def AnswerUpdate(self, groupname, username, ans):
+        """
+        Updates the ans of the question that the user choosed
+
+        Args: 
+            groupname (str): name of the group
+            username (str): name of the user
+            ans (str): ans of the user
+        """
         ans_query = "Update answers set ans = '{}' where groupname='{}' and  username='{}'"
         ans_query = ans_query.format(ans, groupname, username)
         cursor = self.connection.cursor()
@@ -164,6 +228,15 @@ class PostgreHelp:
         self.connection.commit()
 
     def GetCorrectAnswer(self, groupname):
+        """
+        Only current question is saved in the database.
+        You can get the current question's correct answer calling this function
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            answers:  correct answer of the group
+        """
         cursor = self.connection.cursor()
         existingQuestion = "SELECT correctanswer FROM public.questions where groupname = '{}'".format(
             groupname)
@@ -176,6 +249,14 @@ class PostgreHelp:
         return answers
 
     def GetGroupAnswer(self, groupname):
+        """
+        Returns the ans given by all the users to provide the statistics
+
+        Args: 
+            groupname (str): name of the group
+        Returns:
+            Tuple: answers wth ther status, correct answer
+        """
         correct_answer = self.GetCorrectAnswer(groupname)
         cursor = self.connection.cursor()
         existingQuestion = "SELECT * FROM answers where groupname = '{}'".format(
@@ -192,6 +273,13 @@ class PostgreHelp:
         return (ans_stat.most_common(5), correct_answer)
 
     def DeleteCurrentAns(self, groupname, answer):
+        """
+        Deletes the user that has given the wrong answer
+        Users with  empty answers will be deleted later
+        Args: 
+            groupname (str): name of the group
+            groupname (str): correct answer of the group's current session
+        """
         ans_query = "Update answers set ans = '' where groupname='{}' and ans != '{}'"
         ans_query = ans_query.format(groupname, answer)
         cursor = self.connection.cursor()
@@ -199,6 +287,12 @@ class PostgreHelp:
         self.connection.commit()
 
     def EmptyRoom(self, groupname):
+        """
+        After succesfull game play empty the room.
+
+        Args: 
+            groupname (str): name of the group
+        """
         remove_user = "Delete from answers where groupname='{}'"
         remove_user = remove_user.format(groupname)
         cursor = self.connection.cursor()
@@ -212,6 +306,13 @@ class PostgreHelp:
         self.connection.commit()
 
     def RemoveUser(self, groupname, username):
+        """
+        Removes the user in the certain group
+
+        Args: 
+            groupname (str): name of the group
+            username (str): name of the user
+        """
         remove_user = "Delete from answers where groupname='{}' and username = '{}'"
         remove_user = remove_user.format(groupname, username)
         cursor = self.connection.cursor()
@@ -219,6 +320,10 @@ class PostgreHelp:
         self.connection.commit()
 
     def TruncateTables(self):
+        """
+        Truncates all the tables 
+        This function is applicable to call at project iniitiation
+        """
         cursor = self.connection.cursor()
         truncatequestions = "truncate table questions"
         cursor.execute(truncatequestions)

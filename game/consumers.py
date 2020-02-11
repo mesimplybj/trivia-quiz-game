@@ -1,4 +1,9 @@
-# game/consumers.py
+"""
+HQTrivia consumer class
+
+This is the web socket consumer class which is responsible to 
+open , close and  receive message  from the front end
+"""
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
@@ -7,11 +12,16 @@ from .postgrehelper import PostgreHelp
 import time
 import asyncio
 from . import scheduler
-#Game consumer that implements the websockerconsumer
+"""
+Game consumer that implements the websockerconsumer
+"""
 class GameConsumer(WebsocketConsumer):
     numberofuser = 3
     groups = ["broadcast"]
     def connect(self):
+        """
+        whenever any connection is made with the server this   function is called.
+        """
         self.user = self.scope["user"]
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
@@ -28,8 +38,7 @@ class GameConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
-        )
-        
+        )        
     # Receive message from WebSockets
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -62,8 +71,7 @@ class GameConsumer(WebsocketConsumer):
                         }
                     )
                     scheduler.add_new_job(self,self.room_group_name, context)
-            # no room for the new user
-            
+            # no room for the new user            
             else:
                 self.send(text_data=json.dumps({
                     'context': 'rooomfull'
@@ -73,24 +81,21 @@ class GameConsumer(WebsocketConsumer):
                     self.room_group_name,
                     self.channel_name
                 )
+        # user is sending answer to the server                
         elif state == 'answer':
             answer = text_data_json['answer']
             username = text_data_json['username']
             postgreHelp.AnswerUpdate(self.room_name, username, answer)
-        '''
-        elif state == 'disconnect':
-            print('disconnect')
-            username = text_data_json['username']
-            postgreHelp.RemoveUser(self.room_name, username)
-        '''
 
     def client_broadcast_gamestarting(self, event):
-            # Send message to WebSocket
+        # Send message to WebSocket
         self.send(text_data=json.dumps({
             'context': event['context']
     }))
-    # Receive message from room group
     def client_broadcast(self, event):
+        """
+        Broadcast message to the group
+        """
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': event['message'],
@@ -99,28 +104,35 @@ class GameConsumer(WebsocketConsumer):
         }))
 
     def client_broadcast_question(self, event):
-        # Send message to WebSocket
+        """
+        Broadcast question to the group
+        """
         self.send(text_data=json.dumps({
             'context': event['context'],
             'question': event['question'],
             'options': event['options']
         }))
-
+    
     def client_broadcast_result(self, event):
-        # Send message to WebSocket
+        """
+        Broadcast result to the group
+        """
         self.send(text_data=json.dumps({
             'context': event['context'],
             'answer': event['answer'],
             'stat': event['stat']
     }))
-
     def client_broadcast_winner(self, event):
-            # Send message to WebSocket
+        """
+        Broadcast the winner
+        """
         self.send(text_data=json.dumps({
             'context': event['context']
     }))
-
-    def Question(self, que,context):
+    def Question(self, que, context):
+        """
+        Broadcast result to the group
+        """
         if que is not None:
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name,
@@ -133,6 +145,9 @@ class GameConsumer(WebsocketConsumer):
             )
 
     def check_score(self, roomname, context):
+        """
+        This is the timely called method
+        """
         # Receive message from room group
         postgreHelp = PostgreHelp()
         #check  for the old question's number aand difficulty
@@ -174,5 +189,6 @@ class GameConsumer(WebsocketConsumer):
                 pass
             else:
                 time.sleep(5) 
+                # fire another question to the connected user
                 que = postgreHelp.SetQuestion(self.room_name,diffculty,True)
-                self.Question(que,context)       
+                self.Question(que,context) 
