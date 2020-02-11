@@ -7,7 +7,6 @@ from .postgrehelper import PostgreHelp
 import time
 import asyncio
 from . import scheduler
-
 #Game consumer that implements the websockerconsumer
 class GameConsumer(WebsocketConsumer):
     numberofuser = 3
@@ -30,12 +29,13 @@ class GameConsumer(WebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        
     # Receive message from WebSockets
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         state = text_data_json['state']
+        postgreHelp = PostgreHelp()
         if state == 'connect':
-            postgreHelp = PostgreHelp()
             username = text_data_json['username']
             #count the number of user in the group
             count = postgreHelp.GetUserCount(self.room_name, self.numberofuser, username)
@@ -51,7 +51,6 @@ class GameConsumer(WebsocketConsumer):
                         'numberofuser': self.numberofuser
                     }
                 )
-                print(count)
                 # if the group is full then start the quiz
                 if count == self.numberofuser:  # and self.openstate == True:
                     context = 'startgame'
@@ -67,7 +66,7 @@ class GameConsumer(WebsocketConsumer):
             
             else:
                 self.send(text_data=json.dumps({
-                    context: 'rooomfull'
+                    'context': 'rooomfull'
                 }))
                 #dicontinue from the  group pool
                 async_to_sync(self.channel_layer.group_discard)(
@@ -76,10 +75,14 @@ class GameConsumer(WebsocketConsumer):
                 )
         elif state == 'answer':
             answer = text_data_json['answer']
-            username = text_data_json['userName']
-            postgreHelp = PostgreHelp()
+            username = text_data_json['username']
             postgreHelp.AnswerUpdate(self.room_name, username, answer)
-
+        '''
+        elif state == 'disconnect':
+            print('disconnect')
+            username = text_data_json['username']
+            postgreHelp.RemoveUser(self.room_name, username)
+        '''
 
     def client_broadcast_gamestarting(self, event):
             # Send message to WebSocket
@@ -130,7 +133,6 @@ class GameConsumer(WebsocketConsumer):
             )
 
     def check_score(self, roomname, context):
-        print('i am scheduled')
         # Receive message from room group
         postgreHelp = PostgreHelp()
         #check  for the old question's number aand difficulty
@@ -140,7 +142,7 @@ class GameConsumer(WebsocketConsumer):
             que = postgreHelp.SetQuestion(self.room_name,diffculty,False)
             self.Question(que,"startgame")
         else:
-            answers, correct_answer = postgreHelp.GetGroupAnswer(self.room_name)
+            stat, correct_answer = postgreHelp.GetGroupAnswer(self.room_name)
             #if correct_answer is not None and len(correct_answer) > 0:
             postgreHelp.DeleteCurrentAns(self.room_name,correct_answer)
             async_to_sync(self.channel_layer.group_send)(
@@ -148,14 +150,14 @@ class GameConsumer(WebsocketConsumer):
                  {
                     'type': 'client_broadcast_result',
                     'answer': correct_answer,
-                    'stat': answers,
+                    'stat': stat,
                     'context': "result" 
                 }
             )
             usercount = postgreHelp.GetRemainingUserCount(self.room_name)
-            print(usercount)
             if usercount == 0:
                 ##discontinue to broadcast
+                postgreHelp.EmptyRoom(self.room_name)
                 scheduler.stop(self.room_group_name)
                 pass
             elif usercount == 1:
@@ -167,6 +169,7 @@ class GameConsumer(WebsocketConsumer):
                         'context': "winner" 
                     }
                 )
+                postgreHelp.EmptyRoom(self.room_name)
                 scheduler.stop(self.room_group_name)
                 pass
             else:

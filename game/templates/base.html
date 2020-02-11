@@ -146,46 +146,75 @@
             background-color: #279f3a;
             color: black;
         }
+        .answerList label.choose.correctanswer {
+            background-color:
+                #5a5ad0;
+            color:
+                white;
+        }
 
         .incorrectanswer {
             background-color: #ddcece;
             color: black;
         }
+
+        .answerList label.choose.incorrectanswer {
+            background-color:
+                #141420;
+            color:
+                white;
+        }
+
+        #rcorners2 {
+            border-radius: 100%;
+            border: 2px solid #FBFFF6;
+            padding: 20px;
+            width: 200px;
+            height: 200px;
+        }
+
+        #timer {
+            font-size: 100px;
+            width: 20px;
+        }
+
+        .col-centered {
+            display: inline-block;
+            float: none;
+            /* reset the text-align */
+            text-align: left;
+            /* inline-block space fix */
+            margin-right: -4px;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
-    <div id="gameon">
+    <div id="gameon" style="display: none;">
         <div class="container mt-4" id="roomdetail">
             <div class="row">
-                <div class="col-sm">
-                    Maximum number of player: <span id="totalPlayer">0</span>
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
+                    <h1>Welcome to Trivia Quiz Game</h1>
+                    <p>You have entered to play the game. Please wait untill the room is full.</p>
                 </div>
-                <div class="col-sm">
-                    Number of active Players: <span id="userCount">0</span>
+
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6 col-sm-12  m-text-center">
+                    <p> Maximum number of player in this room: <span id="totalPlayer">0</span></p>
+                    <p> Number of active Players willing to play: <span id="userCount">0</span></p>
                 </div>
-                <div class="col-sm" id="time" style="display: none;">
+                <div class="col-md-6 col-sm-12" id="time" style="display: none;">
                     <div class="row begin-countdown">
                         <div class="col-md-12 text-center">
-                            <progress value="10" max="10" id="pageBeginCountdown"></progress>
+                            <p><progress value="10" max="10" id="pageBeginCountdown"></progress></p>
                             <p> Next question in <span id="pageBeginCountdownText">10 </span> seconds</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <section class="call-to-action" id="rooomfull" style="display: none;">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 col-sm-8 text-right m-text-center">
-                        <h1>Sorry the room is fulled and game is going on </h1>
-                    </div>
-                    <div class="col-md-4 col-sm-4 m-text-center">
-                        <a class="btn btn-white">Go to other room</a>
-                    </div>
-                </div>
-            </div>
-        </section>
         <div class='container' id="btnLoogut" style="display: none;">
             <button type="button" class="btn btn-danger">Logout</button>
         </div>
@@ -226,10 +255,12 @@
     <div id="gameoff" style="display: none;">
         <div class="container">
             <div class="row">
-                <div class="col-md-8 col-sm-8 text-right m-text-center">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
                     <h1>Sorry! your answer is incorrect. You are out of this room</h1>
                 </div>
-                <div class="col-md-4 col-sm-4 m-text-center">
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
                     <a class="btn btn-success" target="_Blank" href="/">Go to other room</a>
                 </div>
             </div>
@@ -237,12 +268,45 @@
     </div>
     <div id="gameowinner" style="display: none;">
         <div class="container">
-            <div class="row">
-                <div class="col-md-8 col-sm-8 text-right m-text-center">
-                    <h1>Congratulation you are the winner of the game</h1>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 text-center m-text-center">
+                        <h1>Congratulation you are the winner of the game</h1>
+                    </div>
                 </div>
-                <div class="col-md-4 col-sm-4 m-text-center">
-                    <a class="btn btn-success" target="_Blank" href="/">Go to other room</a>
+                <div class="row mt-5">
+                    <div class="col-md-12 col-sm-12 text-center m-text-center">
+                        <a class="btn btn-success" target="_Blank" href="/">Go to another room</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gamestarting" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
+                    <h1>The game is about to start</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
+                    <p id="rcorners2" class="col-centered">
+                        <span id="timer"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="rooomfull" style="display: none;" class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
+                    <h1>Sorry this room is fulled and game is going on </h1>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-12 col-sm-12 text-center m-text-center">
+                    <a class="btn btn-success" target="_Blank" href="/">Go to another room</a>
                 </div>
             </div>
         </div>
@@ -270,44 +334,79 @@
                 }, 1000);
             });
         }
-
+        function slideUp(el) {
+            setTimeout(() => {
+                let elem = document.getElementById(el);
+                elem.style.transition = "all 3s ease-in-out";
+                elem.style.height = "0px";
+                elem.style.overflow = "hidden";
+            }, 5000);
+        }
+        function TimeCountdown() {
+            var sec = 15;
+            setInterval(function () {
+                document.getElementById("timer").innerHTML = sec;
+                sec--;
+                if (sec < 1)
+                    sec = 0;
+            }, 1000);
+        }
+        function GenerateUniqueName(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
         function GetCookie(cname) {
             var name = cname + "=";
             var ca = document.cookie.split(';');
+            let username = '';
             for (var i = 0; i < ca.length; i++) {
                 var c = ca[i];
                 while (c.charAt(0) == ' ') {
                     c = c.substring(1);
                 }
                 if (c.indexOf(name) == 0) {
-                    return c.substring(name.length, c.length);
+                    userName = c.substring(name.length, c.length);
                 }
             }
-            return "";
+            if (userName == '') {
+                userName = GenerateUniqueName(20);
+                document.cookie = cookieName + "=" + userName;
+                setCookie(cookieName + "=", userName, 1)
+            }
+            return userName;
         }
         var userName = '';
-
-        function websocket() {
-            let roomName = "{{ room_name|escapejs }}";
+        function websocket(roomName) {
             let wsStart = window.location.protocol == "https:" ? "wss://" : "ws://";
             let chatSocket = new WebSocket(
                 wsStart + window.location.host +
                 '/ws/room/' + roomName + '/');
-
             chatSocket.onmessage = function (e) {
                 let data = JSON.parse(e.data);
                 let message = data['message'];
                 let context = data['context'];
                 let numberofuser = data['numberofuser'];
-                console.log(data);
                 switch (context) {
                     case 'connection':
                         IDselector('time').style.display = "none";
                         IDselector('userCount').textContent = message;
                         IDselector('totalPlayer').textContent = numberofuser;
+                        IDselector('gameon').style.display = "block";
                         break;
                     case 'startgame':
                     case 'runninggame':
+                        IDselector('gamestarting').style.display = "none";
                         IDselector('time').style.display = "block";
                         IDselector('questionbox').style.display = "block";
                         startgame();
@@ -317,23 +416,29 @@
                         IDselector('time').style.display = "none";
                         IDselector('questionbox').style.display = "none";
                         IDselector('roomdetail').style.display = "none";
+                        IDselector('rooomfull').style.display = "block";
                     case 'result':
                         let correctanswer = data["answer"]
                         let stat = data["stat"]
                         ShowStat(correctanswer, stat);
                         break;
                     case 'winner':
-                        IDselector('gameon').style.display = "none";
                         IDselector('gameowinner').style.display = "block";
                         chatSocket.close();
+                        slideUp('gameon');
                         break;
                     case 'gamestarting':
-
+                        IDselector('gamestarting').style.display = "block";
+                        TimeCountdown();
                         break;
 
                 }
             };
             chatSocket.onclose = function (e) {
+                chatSocket.send(JSON.stringify({
+                    'state': "disconnect",
+                    'username': userName
+                }));
                 console.error('Chat socket closed');
             };
 
@@ -350,8 +455,7 @@
                 let statLength = stat.length;
                 for (i = 0, length = answerList.length; i < length; ++i) {
                     let lbl = answerList[i];
-
-                    lbl.classList.remove("choose");
+                    //lbl.classList.remove("choose");
                     let options = lbl.querySelectorAll('.options')[0];
                     let ansLabel = options.innerText;
                     if (correctanswer == ansLabel) {
@@ -373,11 +477,14 @@
                 let userAns = IDselector("userAns").value;
                 if (userAns.length == 0 || correctanswer != userAns) {
                     //discontinue connection close here
-                    IDselector('gameon').style.display = "none";
                     IDselector('gameoff').style.display = "block";
+                    //setTimeout(() => {
                     chatSocket.close();
+                    //}, 6000);
+                    slideUp('gameon');
                 }
             }
+
             function startgame() {
                 ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
                     value => {
@@ -427,7 +534,7 @@
                         send_To_Server({
                             'answer': value,
                             'state': "answer",
-                            'userName': userName
+                            'username': userName
                         })
                         radioDisable(true);
                     }
@@ -435,13 +542,12 @@
             }
             init_events();
         }
+        var roomName = "{{ room_name|escapejs }}";
+        var cookieName = roomName + "temptriviauser";
+
         window.onload = function () {
-            userName = GetCookie("temptriviauser");
-            if (userName == "" || userName == null) {
-                window.location.pathname = '/game'; //+ roomName + '/';
-            }
-            else
-                websocket();
+            userName = GetCookie(cookieName);
+            websocket(roomName);
         };
     </script>
 </body>

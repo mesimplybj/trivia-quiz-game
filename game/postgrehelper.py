@@ -4,10 +4,12 @@ import json
 import psycopg2
 from collections import Counter
 
+
 class PostgreHelp:
     def __init__(self):
         #self.redisClient = redis.Redis(host="127.0.0.1", port=6379)
         self.user = 'user'
+        
         '''
         self.connection = psycopg2.connect(user="postgres",
                                            password="admin",
@@ -15,16 +17,18 @@ class PostgreHelp:
                                            port="5432",
                                            database="trivia")
         '''
-        self.connection = psycopg2.connect(user="fmhwoxcvqiwsyq",
-                                  password="a9e68ce1d86a8bb10a9ce15d10df57fb3a3351ce0a5d4241535ca8687f200d8b",
+        self.connection = psycopg2.connect(user="d78hmogumse5m9",
+                                  password="2f55bd846a95842e210cc3ac1585d2254479ccd33219fc5615b23aa1de07feb9",
                                   host="ec2-184-72-236-57.compute-1.amazonaws.com",
                                   port="5432",
                                   database="d78hmogumse5m9")  
         
-    #return the previous question's difficulty and question number.
+    # return the previous question's difficulty and question number.
+
     def OldQuestion(self, groupname):
         cursor = self.connection.cursor()
-        question = "SELECT *  FROM public.questions where groupname = '{}' ".format(groupname)
+        question = "SELECT *  FROM public.questions where groupname = '{}' ".format(
+            groupname)
         cursor.execute(question)
         self.connection.commit()
         difficulty = 'easy'
@@ -40,25 +44,25 @@ class PostgreHelp:
             difficulty = 'hard'
         return (quesno, difficulty)
 
-    #set the question needed to broadcast to the end users
-    def SetQuestion(self, groupname, difficulty,exist):
+    # set the question needed to broadcast to the end users
+    def SetQuestion(self, groupname, difficulty, exist):
         question = ''
         answers = ''
-        quesno=0
+        quesno = 0
         try:
-            ##get question from API
+            cursor = self.connection.cursor()
+            # get question from API
             api = API()
             questionResult = api.GetQuestion(difficulty)
             result = questionResult['results'][0]
             question = result['question']
             correct_answer = result['correct_answer']
             answers = result['incorrect_answers']
-            #mixed and shuffle the options
+            # mixed and shuffle the options
             answers.append(correct_answer)
             shuffle(answers)
             quesno += 1
-            
-            cursor = self.connection.cursor()
+
             if exist == True:
                 #updateUserNO = "UPDATE questions SET  quesno=%s, correctanswer=%s, difficulty=%s, question=%s, answers=%s WHERE groupname= %s"
                 #updateUserNO = (quesno,correct_answer,difficulty,question,answers,groupname)
@@ -83,7 +87,7 @@ class PostgreHelp:
                 cursor.close()
                 self.connection.close()
                 print("PostgreSQL connection is closed")
-        return (question, answers,quesno)
+        return (question, answers, quesno)
 
     def GetQuestion(self, groupname):
         cursor = self.connection.cursor()
@@ -98,12 +102,13 @@ class PostgreHelp:
             answers = int(row[6])
         return (question, answers)
 
-    #returns the number of users associated with current group.
-    #this is called before the  room  has initiated the quiz
+    # returns the number of users associated with current group.
+    # this is called before the  room  has initiated the quiz
     def GetUserCount(self, groupname, maxuser, username):
         # the group already contains the user
         cursor = self.connection.cursor()
-        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' ".format(groupname)
+        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' ".format(
+            groupname)
         cursor.execute(existing_user)
         self.connection.commit()
         row = cursor.fetchone()
@@ -122,19 +127,19 @@ class PostgreHelp:
         elif totalusers == maxuser:
             totalusers += 1
         return totalusers
-    
-    #returns the number of users associated with current group that are answering.
-    #this is checked before the result is sent the  room  has initiated the quiz
+
+    # returns the number of users associated with current group that are answering.
+    # this is checked before the result is sent the  room  has initiated the quiz
     def GetRemainingUserCount(self, groupname):
         cursor = self.connection.cursor()
-        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' and ans != '' ".format(groupname)
+        existing_user = "SELECT Count(1) FROM public.answers where groupname = '{0}' and ans != '' ".format(
+            groupname)
         cursor.execute(existing_user)
         self.connection.commit()
         row = cursor.fetchone()
         totalusers = int(row[0])
         return totalusers
 
-    
     def UpdateUserCount(self, groupname, users):
         users += 1
         updateUserCount = "UPDATE questions SET  userno={0}  WHERE groupname= '{1}'".format(
@@ -160,17 +165,18 @@ class PostgreHelp:
 
     def GetCorrectAnswer(self, groupname):
         cursor = self.connection.cursor()
-        existingQuestion = "SELECT correctanswer FROM public.questions where groupname = '{}'".format(groupname)
+        existingQuestion = "SELECT correctanswer FROM public.questions where groupname = '{}'".format(
+            groupname)
         cursor.execute(existingQuestion)
         self.connection.commit()
         answers = None
         if cursor.rowcount > 0:
             row = cursor.fetchone()
             answers = row[0]
-        return answers 
+        return answers
 
     def GetGroupAnswer(self, groupname):
-        correct_answer = self.GetCorrectAnswer(groupname) 
+        correct_answer = self.GetCorrectAnswer(groupname)
         cursor = self.connection.cursor()
         existingQuestion = "SELECT * FROM answers where groupname = '{}'".format(
             groupname)
@@ -180,23 +186,43 @@ class PostgreHelp:
         if cursor.rowcount > 0:
             rows = cursor.fetchall()
             for row in rows:
-                answers = row[3] 
+                answers = row[3]
                 ans_result.append(answers)
-        ans_stat = Counter(ans_result) 
-        return  (ans_stat.most_common(5), correct_answer)
+        ans_stat = Counter(ans_result)
+        return (ans_stat.most_common(5), correct_answer)
 
-    def DeleteCurrentAns(self, groupname,answer):
+    def DeleteCurrentAns(self, groupname, answer):
         ans_query = "Update answers set ans = '' where groupname='{}' and ans != '{}'"
-        ans_query = ans_query.format(groupname,answer)
+        ans_query = ans_query.format(groupname, answer)
         cursor = self.connection.cursor()
         cursor.execute(ans_query)
-        self.connection.commit()         
+        self.connection.commit()
 
-    def TruncateTables(self): 
+    def EmptyRoom(self, groupname):
+        remove_user = "Delete from answers where groupname='{}'"
+        remove_user = remove_user.format(groupname)
+        cursor = self.connection.cursor()
+        cursor.execute(remove_user)
+        self.connection.commit()
+
+        remove_question = "Delete from questions where groupname='{}'"
+        remove_question = remove_question.format(groupname)
+        cursor = self.connection.cursor()
+        cursor.execute(remove_question)
+        self.connection.commit()
+
+    def RemoveUser(self, groupname, username):
+        remove_user = "Delete from answers where groupname='{}' and username = '{}'"
+        remove_user = remove_user.format(groupname, username)
+        cursor = self.connection.cursor()
+        cursor.execute(remove_user)
+        self.connection.commit()
+
+    def TruncateTables(self):
         cursor = self.connection.cursor()
         truncatequestions = "truncate table questions"
         cursor.execute(truncatequestions)
         self.connection.commit()
         truncatequestions = "truncate table answers"
-        cursor.execute(truncatequestions) 
+        cursor.execute(truncatequestions)
         self.connection.commit()

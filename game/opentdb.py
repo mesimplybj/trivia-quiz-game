@@ -4,7 +4,21 @@ import json
 
 
 class OpenTbRequest:
-    def GetQuestion(self,difficulty):
+    """
+    Class that 
+    """
+    def GetQuestions(self,difficulty):
+        """
+        Returns question along with right and wrong answers from open trivia database.
+
+        Args: 
+           difficulty (str): The difficulty of the question to be set
+        Raises:
+            RuntimeError: Out of fuel
+        Returns:
+            jsom: json containing the question and  answers
+
+        """
         category = str(randint(9, 32))
         url = 'https://opentdb.com/api.php?'
         url += 'amount=1'
@@ -20,7 +34,10 @@ class OpenTbRequest:
             return None   
         return resp.json()
 
-    def TestQuestions(self, difficulty):
+    def GetQuestion(self, difficulty):
+        """
+        Test question
+        """
         return {
             "results": [{
                 "question": " Who is the first prime minister of nepal ?",

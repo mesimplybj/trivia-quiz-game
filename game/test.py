@@ -5,6 +5,10 @@ postgreHelp = PostgreHelp()
 
 postgreHelp.GetUsers('sffffffffdassssssssssssss')
 
+
+
+
+
 '''
 import opentdb as api
 questionResult = api.GetQuestion(difficulty)
@@ -17,7 +21,7 @@ questionResult = api.GetQuestion(difficulty)
 from redishelper import RedisHelp
 
 redisHelp = RedisHelp()
-redishash ='asgi::group:chat_one_ques'
+redishash ='asgi::group:game_one_ques'
 question = redisHelp.SetQuestion(redishash)
 print(question)
 print(redisHelp.GetHashData(redishash,"no"))
