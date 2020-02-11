@@ -16,18 +16,19 @@ class PostgreHelp:
     def __init__(self):
         #self.redisClient = redis.Redis(host="127.0.0.1", port=6379)
         self.user = 'user'
+        '''
         self.connection = psycopg2.connect(user="postgres",
                                            password="admin",
                                            host="127.0.0.1",
                                            port="5432",
                                            database="trivia")
         '''
-        self.connection = psycopg2.connect(user="d78hmogumse5m9",
-                                  password="2f55bd846a95842e210cc3ac1585d2254479ccd33219fc5615b23aa1de07feb9",
-                                  host="ec2-184-72-236-57.compute-1.amazonaws.com",
+        self.connection = psycopg2.connect(user="lvxvwhurgfgvkt",
+                                  password="8760daae3a6638861022a5022fa1a526c8978d7abbeb49a971821cd687e298dd",
+                                  host="ec2-50-17-178-87.compute-1.amazonaws.com",
                                   port="5432",
-                                  database="d78hmogumse5m9")  
-        '''
+                                  database="dad78fj0s1t1rs")  
+        
     def OldQuestion(self, groupname):
         """
         Gives the previous question's difficulty and question number.
