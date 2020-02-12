@@ -122,7 +122,7 @@
         document.querySelector('#customRoom').onclick = function (e) {
             let customRoom = document.querySelector('#txtCustomRoom').value;
             if (customRoom.length > 0)
-                window.location.pathname = '/game/' + customRoom + '/';
+                window.location.pathname = '/' + customRoom + '/';
             else
                 alert('please enter the room name')
         };
