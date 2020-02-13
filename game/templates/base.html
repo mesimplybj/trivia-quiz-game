@@ -146,6 +146,7 @@
             background-color: #279f3a;
             color: black;
         }
+
         .answerList label.choose.correctanswer {
             background-color:
                 #5a5ad0;
@@ -186,6 +187,10 @@
             /* inline-block space fix */
             margin-right: -4px;
             text-align: center;
+        }
+
+        .mt-trivia {
+            margin-top: 100px;
         }
     </style>
 </head>
@@ -252,7 +257,7 @@
             </div>
         </div>
     </div>
-    <div id="gameoff" style="display: none;">
+    <div id="gameoff" style="display: none;" class="mt-trivia">
         <div class="container">
             <div class="row">
                 <div class="col-md-12 col-sm-12 text-center m-text-center">
@@ -261,12 +266,12 @@
             </div>
             <div class="row mt-5">
                 <div class="col-md-12 col-sm-12 text-center m-text-center">
-                    <a class="btn btn-success" target="_Blank" href="/">Go to other room</a>
+                    <a class="btn btn-success" target="_Blank" href="/">Go to another room</a>
                 </div>
             </div>
         </div>
     </div>
-    <div id="gameowinner" style="display: none;">
+    <div id="gameowinner" style="display: none;" class="mt-trivia">
         <div class="container">
             <div class="container">
                 <div class="row">
@@ -282,7 +287,7 @@
             </div>
         </div>
     </div>
-    <div id="gamestarting" style="display: none;">
+    <div id="gamestarting" style="display: none;" >
         <div class="container">
             <div class="row">
                 <div class="col-md-12 col-sm-12 text-center m-text-center">
@@ -316,239 +321,245 @@
     {% endblock %}
 
     <script>
-        //ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
-        //value => alert(`Page has started: ${value}.`)
-        //);
-        function ProgressCountdown(timeleft, bar, text) {
-            return new Promise((resolve, reject) => {
-                var countdownTimer = setInterval(() => {
-                    timeleft--;
-
-                    document.getElementById(bar).value = timeleft;
-                    document.getElementById(text).textContent = timeleft;
-
-                    if (timeleft <= 0) {
-                        clearInterval(countdownTimer);
-                        resolve(true);
-                    }
-                }, 1000);
-            });
-        }
-        function slideUp(el) {
-            setTimeout(() => {
-                let elem = document.getElementById(el);
-                elem.style.transition = "all 3s ease-in-out";
-                elem.style.height = "0px";
-                elem.style.overflow = "hidden";
-            }, 5000);
-        }
-        function TimeCountdown() {
-            var sec = 15;
-            setInterval(function () {
-                document.getElementById("timer").innerHTML = sec;
-                sec--;
-                if (sec < 1)
-                    sec = 0;
-            }, 1000);
-        }
-        function GenerateUniqueName(length) {
-            var result = '';
-            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            var charactersLength = characters.length;
-            for (var i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            }
-            return result;
-        }
-        function setCookie(cname, cvalue, exdays) {
-            var d = new Date();
-            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-            var expires = "expires=" + d.toUTCString();
-            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-        }
-        function GetCookie(cname) {
-            var name = cname + "=";
-            var ca = document.cookie.split(';');
-            let username = '';
-            for (var i = 0; i < ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                    userName = c.substring(name.length, c.length);
-                }
-            }
-            if (userName == '') {
-                userName = GenerateUniqueName(20);
-                document.cookie = cookieName + "=" + userName;
-                setCookie(cookieName + "=", userName, 1)
-            }
-            return userName;
-        }
-        var userName = '';
-        function websocket(roomName) {
-            let wsStart = window.location.protocol == "https:" ? "wss://" : "ws://";
-            let chatSocket = new WebSocket(
-                wsStart + window.location.host +
-                '/ws/room/' + roomName + '/');
-            chatSocket.onmessage = function (e) {
-                let data = JSON.parse(e.data);
-                let message = data['message'];
-                let context = data['context'];
-                let numberofuser = data['numberofuser'];
-                switch (context) {
-                    case 'connection':
-                        IDselector('time').style.display = "none";
-                        IDselector('userCount').textContent = message;
-                        IDselector('totalPlayer').textContent = numberofuser;
-                        IDselector('gameon').style.display = "block";
-                        break;
-                    case 'startgame':
-                    case 'runninggame':
-                        IDselector('gamestarting').style.display = "none";
-                        IDselector('time').style.display = "block";
-                        IDselector('questionbox').style.display = "block";
-                        startgame();
-                        askQuestion(data);
-                        break;
-                    case 'rooomfull':
-                        IDselector('time').style.display = "none";
-                        IDselector('questionbox').style.display = "none";
-                        IDselector('roomdetail').style.display = "none";
-                        IDselector('rooomfull').style.display = "block";
-                    case 'result':
-                        let correctanswer = data["answer"]
-                        let stat = data["stat"]
-                        ShowStat(correctanswer, stat);
-                        break;
-                    case 'winner':
-                        IDselector('gameowinner').style.display = "block";
-                        chatSocket.close();
-                        slideUp('gameon');
-                        break;
-                    case 'gamestarting':
-                        IDselector('gamestarting').style.display = "block";
-                        TimeCountdown();
-                        break;
-
-                }
-            };
-            chatSocket.onclose = function (e) {
-                chatSocket.send(JSON.stringify({
-                    'state': "disconnect",
-                    'username': userName
-                }));
-                console.error('Chat socket closed');
-            };
-
-            chatSocket.onopen = function (e) {
-                chatSocket.send(JSON.stringify({
-                    'message': "connecting to server",
-                    'state': "connect",
-                    'username': userName
-                }));
-            };
-            function ShowStat(correctanswer, stat) {
-                let continueConnection = false;
-                let answerList = document.querySelectorAll('.answerList>li>label');
-                let statLength = stat.length;
-                for (i = 0, length = answerList.length; i < length; ++i) {
-                    let lbl = answerList[i];
-                    //lbl.classList.remove("choose");
-                    let options = lbl.querySelectorAll('.options')[0];
-                    let ansLabel = options.innerText;
-                    if (correctanswer == ansLabel) {
-                        lbl.classList.add("correctanswer");
-                        continueConnection = true;
-                    }
-                    else {
-                        lbl.classList.add("incorrectanswer");
-                    }
-                    for (j = 0; j < statLength; j++) {
-                        let result = stat[j];
-                        if (result[0] == ansLabel) {
-                            count = result[1];
-                            options.textContent = ansLabel + " (" + result[1] + ")";
-                            break;
+        var HqTrivia = {
+            UserName: '',
+            GroupName: "{{ room_name|escapejs }}",
+            CookieName: this.GroupName + "temptriviauser",
+            ProgressCountdown: function (timeleft, bar, text) {
+                return new Promise((resolve, reject) => {
+                    var countdownTimer = setInterval(() => {
+                        timeleft--;
+                        document.getElementById(bar).value = timeleft;
+                        document.getElementById(text).textContent = timeleft;
+                        if (timeleft <= 0) {
+                            clearInterval(countdownTimer);
+                            resolve(true);
                         }
+                    }, 1000);
+                });
+            },
+            SlideUp: function (el) {
+                setTimeout(() => {
+                    let elem = document.getElementById(el);
+                    elem.style.transition = "all 3s ease-in-out";
+                    elem.style.height = "0px";
+                    elem.style.overflow = "hidden";
+                }, 5000);
+            },
+            TimeCountdown: function () {
+                let sec = 15;
+                let this_ = this;
+                setInterval(function () {
+                    this_.ID("timer").innerHTML = sec;
+                    sec--;
+                    if (sec < 1)
+                        sec = 0;
+                }, 1000);
+            },
+            GenerateUniqueName: function (length) {
+                let result = '';
+                let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let charactersLength = characters.length;
+                for (let i = 0; i < length; i++) {
+                    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                }
+                return result;
+            },
+            SetCookie: function (cname, cvalue, exdays) {
+                var d = new Date();
+                d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+                var expires = "expires=" + d.toUTCString();
+                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+            },
+            GetCookie: function (cname) {
+                var name = cname + "=";
+                var ca = document.cookie.split(';');
+                let this_ = this;
+                for (var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        this_.UserName = c.substring(name.length, c.length);
                     }
                 }
-                let userAns = IDselector("userAns").value;
-                if (userAns.length == 0 || correctanswer != userAns) {
-                    //discontinue connection close here
-                    IDselector('gameoff').style.display = "block";
-                    //setTimeout(() => {
-                    chatSocket.close();
-                    //}, 6000);
-                    slideUp('gameon');
+                if (this_.UserName == '') {
+                    this_.UserName = this_.GenerateUniqueName(20);
+                    document.cookie = this_.CookieName + "=" + this_.UserName;
+                    this_.SetCookie(this_.CookieName + "=", this_.UserName, 1)
                 }
-            }
-
-            function startgame() {
-                ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
+                return this_.UserName;
+            },
+            StartGame: function () {
+                let this_ = this;
+                this_.ProgressCountdown(10, 'pageBeginCountdown', 'pageBeginCountdownText').then(
                     value => {
-                        radioDisable(true);
+                        this_.RadioDisable(true);
                     }
                 );
-            }
-            function askQuestion(data) {
+            },
+            RadioDisable: function (active) {
+                let rds = this.QsAll('[name="answerGroup"]')
+                for (i = 0, length = rds.length; i < length; ++i) {
+                    rds[i].disabled = active;
+                }
+            },
+            AskQuestion: function (data) {
                 let question = data['question'];
                 let options = data['options'];
-                IDselector("userAns").value = '';
-                IDFillText('questions', question);
-                let span = document.querySelectorAll('.options')
+                this.ID("userAns").value = '';
+                this.IDText('questions', question);
+                let span = this.QsAll('.options')
                 for (i = 0, length = span.length; i < length; ++i) {
                     span[i].textContent = options[i];;
                     span[i].closest('label').classList.remove("choose", "correctanswer", "incorrectanswer");
                 }
-                radioDisable(false);
-            }
+                this.RadioDisable(false);
+            },
             //obj message is of type json
-            function send_To_Server(objMessage) {
-                chatSocket.send(JSON.stringify(objMessage));
-            }
-            IDselector = function (id) {
-                return document.getElementById(id);
-            };
-            IDFillText = function (id, value) {
-                document.getElementById(id).textContent = value;
-            };
-            Classselector = function () {
-                document.querySelector('#time')
-            };
-
-            radioDisable = function (active) {
-                let rds = document.querySelectorAll('[name="answerGroup"]')
-                for (i = 0, length = rds.length; i < length; ++i) {
-                    rds[i].disabled = active;
-                }
-            }
-            init_events = function () {
-                let rds = document.querySelectorAll('[name="answerGroup"]');
-                for (i = 0, length = rds.length; i < length; ++i) {
-                    rds[i].onclick = function () {
-                        this.closest('label').classList.add("choose");
-                        let value = this.nextElementSibling.innerText;
-                        IDselector("userAns").value = value;
-                        send_To_Server({
-                            'answer': value,
-                            'state': "answer",
-                            'username': userName
-                        })
-                        radioDisable(true);
+            Socket: function () {
+                let this_ = this;
+                let wsStart = window.location.protocol == "https:" ? "wss://" : "ws://";
+                let groupSocket = new WebSocket(
+                    wsStart + window.location.host +
+                    '/ws/room/' + this_.GroupName + '/');
+                groupSocket.onmessage = function (e) {
+                    console.log('onmessage')
+                    let data = JSON.parse(e.data);
+                    let message = data['message'];
+                    let context = data['context'];
+                    let numberofuser = data['numberofuser'];
+                    switch (context) {
+                        case 'connection':
+                            this_.ID('time').style.display = "none";
+                            this_.ID('userCount').textContent = message;
+                            this_.ID('totalPlayer').textContent = numberofuser;
+                            this_.ID('gameon').style.display = "block";
+                            break;
+                        case 'startgame':
+                        case 'runninggame':
+                            this_.ID('gamestarting').style.display = "none";
+                            this_.ID('time').style.display = "block";
+                            this_.ID('questionbox').style.display = "block";
+                            this_.StartGame();
+                            this_.AskQuestion(data);
+                            break;
+                        case 'rooomfull':
+                            this_.ID('time').style.display = "none";
+                            this_.ID('questionbox').style.display = "none";
+                            this_.ID('roomdetail').style.display = "none";
+                            this_.ID('rooomfull').style.display = "block";
+                        case 'result':
+                            let correctanswer = data["answer"]
+                            let stat = data["stat"]
+                            ShowStat(correctanswer, stat);
+                            break;
+                        case 'winner':
+                            this_.ID('gameowinner').style.display = "block";
+                            groupSocket.close();
+                            this_.SlideUp('gameon');
+                            break;
+                        case 'gamestarting':
+                            this_.ID('gamestarting').style.display = "block";
+                            this_.TimeCountdown();
+                            break;
                     }
-                }
+                };
+                groupSocket.onclose = function (e) {
+                    groupSocket.send(JSON.stringify({
+                        'state': "disconnect",
+                        'username': this_.UserName
+                    }));
+                    console.error('Chat socket closed');
+                };
+                groupSocket.onopen = function (e) {
+                    console.log('on open')
+                    groupSocket.send(JSON.stringify({
+                        'message': "connecting to server",
+                        'state': "connect",
+                        'username': this_.UserName
+                    }));
+                };
+                SendTOServer = function (objMessage) {
+                    groupSocket.send(JSON.stringify(objMessage));
+                };
+                ShowStat = function (correctanswer, stat) {
+                    let continueConnection = false;
+                    let answerList = this_.QsAll('.answerList>li>label');
+                    let statLength = stat.length;
+                    for (i = 0, length = answerList.length; i < length; ++i) {
+                        let lbl = answerList[i];
+                        //lbl.classList.remove("choose");
+                        let options = lbl.querySelectorAll('.options')[0];
+                        let ansLabel = options.innerText;
+                        if (correctanswer == ansLabel) {
+                            lbl.classList.add("correctanswer");
+                            continueConnection = true;
+                        }
+                        else {
+                            lbl.classList.add("incorrectanswer");
+                        }
+                        for (j = 0; j < statLength; j++) {
+                            let result = stat[j];
+                            if (result[0] == ansLabel) {
+                                count = result[1];
+                                options.textContent = ansLabel + " (" + result[1] + ")";
+                                break;
+                            }
+                        }
+                    }
+                    let userAns = this_.ID("userAns").value;
+                    if (userAns.length == 0 || correctanswer != userAns) {
+                        //discontinue connection close here
+                        this_.ID('gameoff').style.display = "block";
+                        //setTimeout(() => {
+                        groupSocket.close();
+                        //}, 6000);
+                        this_.SlideUp('gameon');
+                    }
+                };
+                InitEvents = function () {
+                    let rds = document.querySelectorAll('[name="answerGroup"]');
+                    for (i = 0, length = rds.length; i < length; ++i) {
+                        rds[i].onclick = function () {
+                            this.closest('label').classList.add("choose");
+                            let value = this.nextElementSibling.innerText;
+                            this_.ID("userAns").value = value;
+                            SendTOServer({
+                                'answer': value,
+                                'state': "answer",
+                                'username': this_.UserName
+                            })
+                            this_.RadioDisable(true);
+                        }
+                    }
+                };
+                InitEvents();
+            },
+            ID: function (id) {
+                return document.getElementById(id);
+            },
+            IDText: function (id, value) {
+                document.getElementById(id).innerHTML = value;
+            },
+            Cls: function (className) {
+                document.querySelector('.' + className);
+            },
+            Qs: function (selector) {
+                return document.querySelector(selector);
+            },
+            QsAll: function (selector) {
+                return document.querySelectorAll(selector);
+            },
+            Init: function () {
+                this.UserName = this.GetCookie(this.CookieName);
+                this.Socket();
             }
-            init_events();
         }
-        var roomName = "{{ room_name|escapejs }}";
-        var cookieName = roomName + "temptriviauser";
-
         window.onload = function () {
-            userName = GetCookie(cookieName);
-            websocket(roomName);
-        };
+            HqTrivia.Init();
+        };        
     </script>
 </body>
 
