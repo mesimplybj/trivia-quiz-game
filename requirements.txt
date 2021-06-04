@@ -1,5 +1,5 @@
 gunicorn
-Django==3.0.3
+Django==3.0.14
 channels==2.4.0
 django-redis-cache
 whitenoise
